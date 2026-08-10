@@ -1,0 +1,26 @@
+package com.echonovel.controller;
+
+import com.echonovel.dto.ApiResponse;
+import com.echonovel.dto.request.VipUpdateRequest;
+import com.echonovel.dto.response.UserResponse;
+import com.echonovel.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/admin/users")
+@RequiredArgsConstructor
+public class UserController {
+
+    private final UserService userService;
+
+    @PutMapping("/{userId}/vip")
+    public ResponseEntity<ApiResponse<UserResponse>> updateVipStatus(
+            @PathVariable Long userId,
+            @Valid @RequestBody VipUpdateRequest request) {
+        UserResponse data = userService.updateUserVipStatus(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái VIP thành công", data));
+    }
+}

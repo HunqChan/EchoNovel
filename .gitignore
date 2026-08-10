@@ -1,0 +1,41 @@
+# ========================
+# Environment & Secrets
+# ========================
+.env
+backend/src/main/resources/application.properties
+
+# ========================
+# Java / Maven
+# ========================
+backend/target/
+*.class
+*.jar
+*.war
+*.log
+*.iml
+
+# ========================
+# IDE
+# ========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ========================
+# Node / React
+# ========================
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
