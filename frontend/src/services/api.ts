@@ -26,19 +26,24 @@ api.interceptors.request.use(
 );
 
 /**
- * Response interceptor - Handle 401 (redirect to login)
+ * Response interceptor - Handle 401
+ * Skip auto-redirect for content endpoints so pages can show their own error UI
  */
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Clear stored auth data
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      const url = error.config?.url || '';
+      const isContentEndpoint = url.includes('/chapters/') || url.includes('/stories/');
 
-      // Redirect to login (avoid redirect loop)
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      // Only auto-redirect for non-content endpoints (e.g. admin APIs)
+      if (!isContentEndpoint) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

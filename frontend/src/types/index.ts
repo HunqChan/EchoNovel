@@ -13,6 +13,20 @@ export interface ErrorResponse {
   details: Record<string, string> | null;
 }
 
+/**
+ * Spring Boot Page<T> response structure
+ */
+export interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number; // current page (0-indexed)
+  size: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
 // ========== Auth Types ==========
 
 export interface LoginRequest {
@@ -43,6 +57,13 @@ export interface UserResponse {
   createdAt: string;
 }
 
+// ========== Genre Types ==========
+
+export interface GenreResponse {
+  id: number;
+  name: string;
+}
+
 // ========== Story Types ==========
 
 export interface StoryResponse {
@@ -54,6 +75,7 @@ export interface StoryResponse {
   coverImage: string | null;
   description: string | null;
   status: 'ONGOING' | 'COMPLETED';
+  chapters?: ChapterResponse[];
   createdAt: string;
   updatedAt: string;
 }
