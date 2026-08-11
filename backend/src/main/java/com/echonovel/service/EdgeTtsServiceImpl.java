@@ -37,7 +37,7 @@ public class EdgeTtsServiceImpl implements TtsService {
             "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1";
     private static final String TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
     private static final String EDGE_UA =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0";
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0";
 
     // Audio separator in binary messages
     private static final String AUDIO_HEADER_SEPARATOR = "Path:audio\r\n";
@@ -115,11 +115,21 @@ public class EdgeTtsServiceImpl implements TtsService {
         CompletableFuture<Void> completionFuture = new CompletableFuture<>();
 
         HttpClient client = HttpClient.newBuilder().build();
+        
+        // Append DRM parameters to URI
+        String secMsGec = generateSecMsGec();
+        String fullWsUri = wsUri + "&Sec-MS-GEC=" + secMsGec + "&Sec-MS-GEC-Version=1-143.0.3650.75";
+        String muid = generateMuid();
 
         WebSocket ws = client.newWebSocketBuilder()
                 .header("User-Agent", EDGE_UA)
                 .header("Origin", "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold")
-                .buildAsync(URI.create(wsUri), new WebSocket.Listener() {
+                .header("Cookie", "muid=" + muid)
+                .header("Pragma", "no-cache")
+                .header("Cache-Control", "no-cache")
+                .header("Accept-Encoding", "gzip, deflate, br, zstd")
+                .header("Accept-Language", "en-US,en;q=0.9")
+                .buildAsync(URI.create(fullWsUri), new WebSocket.Listener() {
 
                     private StringBuilder textBuffer = new StringBuilder();
 
@@ -278,5 +288,42 @@ public class EdgeTtsServiceImpl implements TtsService {
         }
 
         return chunks;
+    }
+
+    /**
+     * Generate Sec-MS-GEC token to bypass 403 Forbidden.
+     */
+    private String generateSecMsGec() throws Exception {
+        long ticks = Instant.now().getEpochSecond();
+        ticks += 11644473600L; // Windows epoch
+        ticks -= ticks % 300; // Round down to 5 mins
+        ticks *= 10000000L; // Convert to 100-nanosecond intervals
+
+        String strToHash = ticks + TRUSTED_CLIENT_TOKEN;
+        java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(strToHash.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        
+        StringBuilder hexString = new StringBuilder(2 * hash.length);
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if(hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString().toUpperCase();
+    }
+
+    /**
+     * Generate a random MUID for the Cookie header.
+     */
+    private String generateMuid() {
+        byte[] bytes = new byte[16];
+        new java.security.SecureRandom().nextBytes(bytes);
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
     }
 }

@@ -19,6 +19,7 @@ import ChapterReadPage from './pages/ChapterReadPage';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPlaceholder from './pages/admin/AdminPlaceholder';
 
 import './index.css';
 
@@ -50,7 +51,11 @@ function App() {
           <Route element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
               <Route path="/admin" element={<AdminDashboard />} />
-              {/* Future admin pages: /admin/stories, /admin/chapters, etc. */}
+              <Route path="/admin/stories" element={<AdminPlaceholder />} />
+              <Route path="/admin/chapters" element={<AdminPlaceholder />} />
+              <Route path="/admin/genres" element={<AdminPlaceholder />} />
+              <Route path="/admin/authors" element={<AdminPlaceholder />} />
+              <Route path="/admin/users" element={<AdminPlaceholder />} />
             </Route>
           </Route>
         </Routes>
