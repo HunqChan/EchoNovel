@@ -6,7 +6,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 120000, // 2 minutes to accommodate long requests like TTS generation
 });
 
 /**

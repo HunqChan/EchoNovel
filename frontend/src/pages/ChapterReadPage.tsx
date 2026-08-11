@@ -111,6 +111,8 @@ export default function ChapterReadPage() {
       try {
         const res = await audioService.generateTts(chapter.id, voice);
         setAudioData(res.data);
+        // Force autoPlay when user explicitly generates TTS
+        window.history.replaceState({ ...window.history.state, usr: { autoPlay: true } }, '');
         toast.success('Tạo giọng đọc AI thành công!');
       } catch (err) {
         const error = err as AxiosError<ErrorResponse>;
@@ -130,9 +132,13 @@ export default function ChapterReadPage() {
   const handleAudioEnded = useCallback(() => {
     if (autoContinue && nextChapter) {
       toast('⏭️ Chuyển chương tiếp theo...', { duration: 2000 });
-      navigate(`/chapters/${nextChapter.id}`);
+      // Pass autoPlay state to the next page
+      navigate(`/chapters/${nextChapter.id}`, { state: { autoPlay: true } });
     }
   }, [autoContinue, nextChapter, navigate]);
+
+  // Determine if we should autoPlay audio based on navigation state or generation success
+  const shouldAutoPlay = window.history.state?.usr?.autoPlay === true;
 
   // ───── Loading state ─────
   if (loading) {
@@ -269,10 +275,10 @@ export default function ChapterReadPage() {
           to={`/stories/${chapter.storyId}`}
           className="text-sm text-text-secondary transition-colors hover:text-primary"
         >
-          {chapter.storyTitle}
+          {chapter.storyTitle?.normalize('NFC')}
         </Link>
         <h1 className="mt-2 text-xl font-bold text-text-primary sm:text-2xl">
-          Chương {chapter.chapterNumber}: {chapter.title}
+          Chương {chapter.chapterNumber}: {chapter.title?.normalize('NFC')}
         </h1>
       </div>
 
@@ -281,12 +287,13 @@ export default function ChapterReadPage() {
         <div className="mb-6">
           <AudioPlayer
             audioUrl={audioData?.audioUrl ?? null}
-            chapterTitle={`Chương ${chapter.chapterNumber}: ${chapter.title}`}
+            chapterTitle={`Chương ${chapter.chapterNumber}: ${chapter.title?.normalize('NFC')}`}
             isGenerating={ttsGenerating}
             onEnded={handleAudioEnded}
             onRequestTts={handleGenerateTts}
             autoContinue={autoContinue}
             onAutoContinueChange={setAutoContinue}
+            autoPlay={shouldAutoPlay}
           />
         </div>
       )}
@@ -298,9 +305,9 @@ export default function ChapterReadPage() {
       <article className="my-8 rounded-2xl border border-white/10 bg-surface-light p-6 sm:p-8 lg:p-10">
         <div
           className="prose-chapter text-base leading-8 text-text-primary/90 whitespace-pre-line"
-          style={{ fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: '17px', lineHeight: '1.9' }}
+          style={{ fontSize: '17px', lineHeight: '1.9' }}
         >
-          {chapter.content || 'Chương này chưa có nội dung.'}
+          {chapter.content ? chapter.content.normalize('NFC') : 'Chương này chưa có nội dung.'}
         </div>
       </article>
 

@@ -25,6 +25,8 @@ interface AudioPlayerProps {
   /** Auto-continue toggle */
   autoContinue: boolean;
   onAutoContinueChange: (value: boolean) => void;
+  /** Whether to play automatically when audio URL is set */
+  autoPlay?: boolean;
 }
 
 const VOICES = [
@@ -47,6 +49,7 @@ export default function AudioPlayer({
   onRequestTts,
   autoContinue,
   onAutoContinueChange,
+  autoPlay = false,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -82,16 +85,20 @@ export default function AudioPlayer({
     };
   }, [audioUrl, onEnded]);
 
-  // Auto-play when audioUrl changes (e.g., after TTS generation)
+  // Handle auto-play when audioUrl changes
   useEffect(() => {
     if (audioUrl && audioRef.current) {
       audioRef.current.load();
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+      if (autoPlay) {
+        audioRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => setIsPlaying(false));
+      } else {
+        setIsPlaying(false);
+      }
     }
-  }, [audioUrl]);
+  }, [audioUrl, autoPlay]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
