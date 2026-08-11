@@ -48,4 +48,11 @@ public class ApiResponse<T> {
                 .data(data)
                 .build();
     }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return ApiResponse.<T>builder()
+                .status(404)
+                .message(message)
+                .build();
+    }
 }

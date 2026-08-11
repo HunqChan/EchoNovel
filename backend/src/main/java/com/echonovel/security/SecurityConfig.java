@@ -56,6 +56,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/chapters/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/genres/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/authors/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+
+                        // TTS endpoint (access check done in service layer)
+                        .requestMatchers(HttpMethod.POST, "/api/chapters/*/tts").permitAll()
 
                         // Admin routes
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { chapterService } from '../services/chapterService';
-import type { ChapterResponse, ErrorResponse } from '../types';
+import { audioService } from '../services/audioService';
+import type { ChapterResponse, AudioFileResponse, ErrorResponse } from '../types';
 import type { AxiosError } from 'axios';
+import toast from 'react-hot-toast';
+import AudioPlayer from '../components/AudioPlayer';
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,18 +30,31 @@ export default function ChapterReadPage() {
   const [loading, setLoading] = useState(true);
   const [accessError, setAccessError] = useState<AccessError | null>(null);
 
+  // Audio state
+  const [audioData, setAudioData] = useState<AudioFileResponse | null>(null);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [ttsGenerating, setTtsGenerating] = useState(false);
+  const [autoContinue, setAutoContinue] = useState(() => {
+    return localStorage.getItem('autoContinue') === 'true';
+  });
+
+  // Persist auto-continue preference
+  useEffect(() => {
+    localStorage.setItem('autoContinue', String(autoContinue));
+  }, [autoContinue]);
+
   // Fetch chapter content
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setAccessError(null);
     setChapter(null);
+    setAudioData(null);
 
     chapterService
       .getChapterById(Number(id))
       .then((res) => {
         setChapter(res.data);
-        // After getting the chapter, fetch all chapters for navigation
         return chapterService.getChaptersByStoryId(res.data.storyId);
       })
       .then((res) => {
@@ -68,14 +84,55 @@ export default function ChapterReadPage() {
       })
       .finally(() => setLoading(false));
 
-    // Scroll to top on chapter change
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
-  // Find prev/next chapter
+  // Fetch audio when chapter loads successfully
+  useEffect(() => {
+    if (!chapter) return;
+    setAudioLoading(true);
+
+    audioService
+      .getAudio(chapter.id)
+      .then((res) => setAudioData(res.data))
+      .catch(() => {
+        // 404 = no audio yet, that's expected
+        setAudioData(null);
+      })
+      .finally(() => setAudioLoading(false));
+  }, [chapter]);
+
+  // Handle TTS generation
+  const handleGenerateTts = useCallback(
+    async (voice: string) => {
+      if (!chapter) return;
+      setTtsGenerating(true);
+
+      try {
+        const res = await audioService.generateTts(chapter.id, voice);
+        setAudioData(res.data);
+        toast.success('Tạo giọng đọc AI thành công!');
+      } catch (err) {
+        const error = err as AxiosError<ErrorResponse>;
+        toast.error(error.response?.data?.message || 'Tạo audio thất bại, vui lòng thử lại');
+      } finally {
+        setTtsGenerating(false);
+      }
+    },
+    [chapter]
+  );
+
+  // Handle auto-continue: navigate to next chapter and trigger TTS
   const currentIndex = allChapters.findIndex((c) => c.id === Number(id));
   const prevChapter = currentIndex > 0 ? allChapters[currentIndex - 1] : null;
   const nextChapter = currentIndex < allChapters.length - 1 ? allChapters[currentIndex + 1] : null;
+
+  const handleAudioEnded = useCallback(() => {
+    if (autoContinue && nextChapter) {
+      toast('⏭️ Chuyển chương tiếp theo...', { duration: 2000 });
+      navigate(`/chapters/${nextChapter.id}`);
+    }
+  }, [autoContinue, nextChapter, navigate]);
 
   // ───── Loading state ─────
   if (loading) {
@@ -218,6 +275,21 @@ export default function ChapterReadPage() {
           Chương {chapter.chapterNumber}: {chapter.title}
         </h1>
       </div>
+
+      {/* Audio Player */}
+      {!audioLoading && (
+        <div className="mb-6">
+          <AudioPlayer
+            audioUrl={audioData?.audioUrl ?? null}
+            chapterTitle={`Chương ${chapter.chapterNumber}: ${chapter.title}`}
+            isGenerating={ttsGenerating}
+            onEnded={handleAudioEnded}
+            onRequestTts={handleGenerateTts}
+            autoContinue={autoContinue}
+            onAutoContinueChange={setAutoContinue}
+          />
+        </div>
+      )}
 
       {/* Top navigation */}
       <ChapterNav />

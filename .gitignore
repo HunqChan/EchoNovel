@@ -39,3 +39,8 @@ frontend/.env
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ========================
+# Uploads (audio files)
+# ========================
+uploads/

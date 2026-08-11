@@ -110,3 +110,16 @@ export interface ChapterRequest {
   chapterNumber: number;
   accessLevel?: string;
 }
+
+// ========== Audio Types ==========
+
+export interface AudioFileResponse {
+  id: number;
+  chapterId: number;
+  chapterTitle: string;
+  filePath: string;
+  audioUrl: string;
+  source: 'UPLOAD' | 'TTS';
+  duration: number;
+  createdAt: string;
+}

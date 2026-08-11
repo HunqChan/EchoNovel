@@ -267,14 +267,14 @@ npm run build
 | 5 | Xử lý 403 → hiển thị yêu cầu đăng nhập/nâng cấp VIP | [BB] | ✅ Đã xong |
 
 #### Tuần 3 - Audio & TTS
-| # | Việc cần làm | Mức độ |
-|---|-------------|--------|
-| 1 | Entity `AudioFile` (chapter_id, file_path, source UPLOAD/TTS) | [BB] |
-| 2 | Admin upload audio cho chương | [BB] |
-| 3 | Trình phát audio HTML5 trên React | [BB] |
-| 4 | Tích hợp FPT.AI TTS API | [BB] |
-| 5 | Cache file audio đã tạo | [BB] |
-| 6 | Kiểm tra quyền trước khi phát/tạo audio | [BB] |
+| # | Việc cần làm | Mức độ | Trạng thái |
+|---|-------------|--------|------------|
+| 1 | Entity `AudioFile` + Repository + DTO | [BB] | ✅ Đã xong |
+| 2 | Edge TTS Service (WebSocket → Microsoft Bing TTS, miễn phí) | [BB] | ✅ Đã xong |
+| 3 | AudioController (GET audio, POST TTS, POST admin upload) | [BB] | ✅ Đã xong |
+| 4 | Access control + Cache audio đã tạo | [BB] | ✅ Đã xong |
+| 5 | Static resource serving + SecurityConfig update | [BB] | ✅ Đã xong |
+| 6 | Trình phát audio HTML5 trên React (AudioPlayer + auto-continue) | [BB] | ✅ Đã xong |
 
 #### Tuần 4 - Tính năng nâng cao
 | # | Việc cần làm | Mức độ |

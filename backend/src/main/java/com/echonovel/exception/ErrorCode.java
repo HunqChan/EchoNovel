@@ -33,6 +33,10 @@ public enum ErrorCode {
     // ========== Author ==========
     AUTHOR_NOT_FOUND("AUTHOR_NOT_FOUND", "Không tìm thấy tác giả", HttpStatus.NOT_FOUND),
 
+    // ========== Audio ==========
+    AUDIO_NOT_FOUND("AUDIO_NOT_FOUND", "Chương này chưa có audio", HttpStatus.NOT_FOUND),
+    TTS_GENERATION_FAILED("TTS_GENERATION_FAILED", "Tạo audio thất bại, vui lòng thử lại", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // ========== General ==========
     VALIDATION_ERROR("VALIDATION_ERROR", "Dữ liệu không hợp lệ", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR("INTERNAL_ERROR", "Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR);
