@@ -15,4 +15,7 @@ public interface ChapterRepository extends JpaRepository<Chapter, Long> {
     Optional<Chapter> findByStoryIdAndChapterNumber(Long storyId, Integer chapterNumber);
 
     boolean existsByStoryIdAndChapterNumber(Long storyId, Integer chapterNumber);
+
+    @org.springframework.data.jpa.repository.Query("SELECT c.accessLevel, COUNT(c) FROM Chapter c GROUP BY c.accessLevel")
+    List<Object[]> countChaptersByAccessLevel();
 }

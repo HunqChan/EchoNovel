@@ -3,7 +3,7 @@ import type { ApiResponse, StoryResponse, PageResponse, GenreResponse } from '..
 
 export interface StoryFilters {
   keyword?: string;
-  genreId?: number;
+  genreIds?: number[];
   status?: string;
   page?: number;
   size?: number;
@@ -18,7 +18,9 @@ export const storyService = {
     const params = new URLSearchParams();
 
     if (filters.keyword) params.append('keyword', filters.keyword);
-    if (filters.genreId) params.append('genreId', String(filters.genreId));
+    if (filters.genreIds && filters.genreIds.length > 0) {
+      params.append('genreIds', filters.genreIds.join(','));
+    }
     if (filters.status) params.append('status', filters.status);
     params.append('page', String(filters.page ?? 0));
     params.append('size', String(filters.size ?? 12));
@@ -41,6 +43,30 @@ export const storyService = {
    */
   getGenres: async (): Promise<ApiResponse<GenreResponse[]>> => {
     const response = await api.get<ApiResponse<GenreResponse[]>>('/genres');
+    return response.data;
+  },
+
+  /**
+   * Admin: Create story
+   */
+  createStory: async (data: import('../types').StoryRequest): Promise<ApiResponse<StoryResponse>> => {
+    const response = await api.post<ApiResponse<StoryResponse>>('/admin/stories', data);
+    return response.data;
+  },
+
+  /**
+   * Admin: Update story
+   */
+  updateStory: async (id: number, data: import('../types').StoryRequest): Promise<ApiResponse<StoryResponse>> => {
+    const response = await api.put<ApiResponse<StoryResponse>>(`/admin/stories/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Admin: Delete story
+   */
+  deleteStory: async (id: number): Promise<ApiResponse<void>> => {
+    const response = await api.delete<ApiResponse<void>>(`/admin/stories/${id}`);
     return response.data;
   },
 };

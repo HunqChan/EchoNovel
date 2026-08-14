@@ -25,11 +25,11 @@ public class StoryController {
     @GetMapping("/api/stories")
     public ResponseEntity<ApiResponse<Page<StoryResponse>>> getStories(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) java.util.List<Long> genreIds,
             @RequestParam(required = false) com.echonovel.enums.StoryStatus status,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        Page<StoryResponse> data = storyService.getStories(keyword, genreId, status, pageable);
+        Page<StoryResponse> data = storyService.getStories(keyword, genreIds, status, pageable);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 

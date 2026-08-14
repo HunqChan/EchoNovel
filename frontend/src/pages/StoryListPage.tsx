@@ -12,8 +12,14 @@ export default function StoryListPage() {
 
   // Filters
   const [keyword, setKeyword] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState<number | undefined>(undefined);
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
+
+  // Genre Modal States
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [genreSearchInput, setGenreSearchInput] = useState('');
+  // Temp selection for modal before applying
+  const [tempSelectedGenres, setTempSelectedGenres] = useState<number[]>([]);
 
   // Debounced search
   const [searchInput, setSearchInput] = useState('');
@@ -29,7 +35,7 @@ export default function StoryListPage() {
     try {
       const res = await storyService.getStories({
         keyword: keyword || undefined,
-        genreId: selectedGenre,
+        genreIds: selectedGenres,
         page: currentPage,
         size: 12,
       });
@@ -40,7 +46,7 @@ export default function StoryListPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, selectedGenre, currentPage]);
+  }, [keyword, selectedGenres, currentPage]);
 
   useEffect(() => {
     fetchStories();
@@ -55,9 +61,22 @@ export default function StoryListPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const handleGenreChange = (genreId: number | undefined) => {
-    setSelectedGenre(genreId);
+  const applyGenreFilter = () => {
+    setSelectedGenres(tempSelectedGenres);
     setCurrentPage(0);
+    setIsFilterModalOpen(false);
+  };
+
+  const toggleTempGenre = (id: number) => {
+    setTempSelectedGenres(prev => 
+      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+    );
+  };
+
+  const openFilterModal = () => {
+    setTempSelectedGenres(selectedGenres);
+    setGenreSearchInput('');
+    setIsFilterModalOpen(true);
   };
 
   return (
@@ -82,21 +101,15 @@ export default function StoryListPage() {
           />
         </div>
 
-        {/* Genre filter */}
+        {/* Genre filter button */}
         <div className="relative">
-          <Filter className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
-          <select
-            value={selectedGenre ?? ''}
-            onChange={(e) => handleGenreChange(e.target.value ? Number(e.target.value) : undefined)}
-            className="appearance-none rounded-xl border border-white/10 bg-surface-light py-3 pl-10 pr-10 text-sm text-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+          <button
+            onClick={openFilterModal}
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-surface-light px-6 py-3 text-sm font-medium text-text-primary transition-all hover:bg-white/5"
           >
-            <option value="">Tất cả thể loại</option>
-            {genres.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
+            <Filter className="h-4 w-4 text-text-secondary" />
+            Lọc thể loại {selectedGenres.length > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white">{selectedGenres.length}</span>}
+          </button>
         </div>
       </div>
 
@@ -223,6 +236,79 @@ export default function StoryListPage() {
             Sau
             <ChevronRight className="h-4 w-4" />
           </button>
+        </div>
+      )}
+
+      {/* ───── Filter Modal ───── */}
+      {isFilterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex items-center justify-between border-b border-white/10 bg-surface-light px-6 py-4">
+              <h2 className="text-xl font-bold text-text-primary">Lọc Truyện Theo Thể Loại</h2>
+              <button onClick={() => setIsFilterModalOpen(false)} className="text-text-secondary hover:text-white">✕</button>
+            </div>
+            
+            <div className="p-4 border-b border-white/10 bg-surface-light">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                <input
+                  type="text"
+                  placeholder="Tìm thể loại..."
+                  value={genreSearchInput}
+                  onChange={(e) => setGenreSearchInput(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-surface pl-10 pr-4 py-2 text-sm text-text-primary outline-none focus:border-primary/50"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="p-4 overflow-y-auto flex-1">
+              <div className="grid grid-cols-2 gap-2">
+                {genres
+                  .filter(g => g.name.toLowerCase().includes(genreSearchInput.toLowerCase()))
+                  .map(genre => (
+                    <label 
+                      key={genre.id} 
+                      className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 transition-colors ${
+                        tempSelectedGenres.includes(genre.id)
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-white/10 bg-surface-light text-text-secondary hover:border-white/20 hover:text-text-primary'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={tempSelectedGenres.includes(genre.id)}
+                        onChange={() => toggleTempGenre(genre.id)}
+                        className="hidden"
+                      />
+                      <span className="text-sm font-medium">{genre.name}</span>
+                    </label>
+                  ))}
+                {genres.filter(g => g.name.toLowerCase().includes(genreSearchInput.toLowerCase())).length === 0 && (
+                  <div className="col-span-2 text-center text-sm text-text-secondary py-4">
+                    Không tìm thấy thể loại phù hợp.
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="border-t border-white/10 bg-surface-light px-6 py-4 flex justify-between items-center">
+              <button
+                onClick={() => setTempSelectedGenres([])}
+                className="text-sm text-text-secondary hover:text-text-primary underline"
+              >
+                Bỏ chọn tất cả
+              </button>
+              <div className="flex gap-3">
+                <button onClick={() => setIsFilterModalOpen(false)} className="rounded-xl px-5 py-2.5 text-sm font-medium text-text-secondary hover:bg-white/5">
+                  Hủy
+                </button>
+                <button onClick={applyGenreFilter} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary/25 hover:bg-primary-dark">
+                  Áp dụng
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

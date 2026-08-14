@@ -7,7 +7,6 @@ import {
   ChevronRight,
   LayoutDashboard,
   Library,
-  ListOrdered,
   LogOut,
   Tags,
   UserCircle,
@@ -17,8 +16,7 @@ import {
 
 const sidebarLinks = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/stories', label: 'Quản lý Truyện', icon: Library },
-  { to: '/admin/chapters', label: 'Quản lý Chương', icon: ListOrdered },
+  { to: '/admin/stories', label: 'Truyện & Chương', icon: Library },
   { to: '/admin/genres', label: 'Thể loại', icon: Tags },
   { to: '/admin/authors', label: 'Tác giả', icon: PenTool },
   { to: '/admin/users', label: 'Người dùng', icon: Users },

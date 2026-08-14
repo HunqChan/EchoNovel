@@ -34,8 +34,10 @@ public class StoryService {
     /**
      * Get all stories with filtering and pagination
      */
-    public Page<StoryResponse> getStories(String keyword, Long genreId, StoryStatus status, Pageable pageable) {
-        return storyRepository.findFilteredStories(keyword, genreId, status, pageable)
+    public Page<StoryResponse> getStories(String keyword, java.util.List<Long> genreIds, StoryStatus status, Pageable pageable) {
+        boolean hasGenreIds = genreIds != null && !genreIds.isEmpty();
+        java.util.List<Long> safeGenreIds = hasGenreIds ? genreIds : java.util.Collections.singletonList(-1L);
+        return storyRepository.findFilteredStories(keyword, hasGenreIds, safeGenreIds, status, pageable)
                 .map(StoryResponse::fromEntity);
     }
 

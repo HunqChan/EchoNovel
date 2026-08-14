@@ -1,97 +1,258 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Headphones, Lock, Sparkles } from 'lucide-react';
+import { PlayCircle, Headphones, Trophy, Grid, Bell, Star, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { storyService } from '../services/storyService';
+import type { StoryResponse } from '../types';
 
 export default function HomePage() {
+  const [featuredStories, setFeaturedStories] = useState<StoryResponse[]>([]);
+  const [recentStories, setRecentStories] = useState<StoryResponse[]>([]);
+  const [topStories, setTopStories] = useState<StoryResponse[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [recentRes, topRes] = await Promise.all([
+          storyService.getStories({ size: 15, sort: 'createdAt,desc' }),
+          storyService.getStories({ size: 5, sort: 'id,asc' }) // Mượn tạm id asc làm top
+        ]);
+        
+        const allRecent = recentRes.data.content;
+        setFeaturedStories(allRecent.slice(0, 5));
+        setRecentStories(allRecent.slice(5));
+        setTopStories(topRes.data.content);
+      } catch (err) {
+        console.error('Error fetching homepage data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Auto carousel
+  useEffect(() => {
+    if (featuredStories.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % featuredStories.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [featuredStories]);
+
+  const nextSlide = () => setCurrentSlide((p) => (p + 1) % featuredStories.length);
+  const prevSlide = () => setCurrentSlide((p) => (p - 1 + featuredStories.length) % featuredStories.length);
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  const quickActions = [
+    { icon: Headphones, label: 'Truyện đã nghe', color: 'bg-pink-500/10 text-pink-500', path: '/library' },
+    { icon: Trophy, label: 'BXH Vinh Danh', color: 'bg-purple-500/10 text-purple-500', path: '/stories' },
+    { icon: Grid, label: 'Thể loại', color: 'bg-blue-500/10 text-blue-500', path: '/stories' },
+    { icon: Bell, label: 'Thông báo', color: 'bg-green-500/10 text-green-500', path: '/' },
+    { icon: Star, label: 'Hoạt động', color: 'bg-yellow-500/10 text-yellow-500', path: '/' },
+  ];
+
   return (
-    <div className="min-h-[calc(100vh-8rem)]">
-      {/* ───── Hero Section ───── */}
-      <section className="relative overflow-hidden py-20 sm:py-28 lg:py-36">
-        {/* Glow effects */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[600px] rounded-full bg-primary/8 blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-[400px] w-[500px] rounded-full bg-secondary/8 blur-3xl" />
-        </div>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* ───── Hero & Leaderboard Grid ───── */}
+      <div className="grid gap-6 lg:grid-cols-4">
+        {/* Main Carousel (Left 3 columns) */}
+        <div className="lg:col-span-3 relative overflow-hidden rounded-2xl bg-surface shadow-2xl aspect-[16/9] sm:aspect-[21/9] group">
+          {featuredStories.length > 0 && (
+            <>
+              {/* Background Blur Image */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50 transition-transform duration-1000 group-hover:scale-105 blur-[2px]"
+                style={{ backgroundImage: `url(${featuredStories[currentSlide].coverImage || 'https://via.placeholder.com/800'})` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
 
-        <div className="relative mx-auto max-w-4xl px-4 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
-            <Sparkles className="h-4 w-4" />
-            AI-powered Text-to-Speech
-          </div>
-
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-            <span className="text-text-primary">Đọc &amp; Nghe Truyện</span>
-            <br />
-            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              Mọi lúc, Mọi nơi
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-text-secondary">
-            EchoNovel là nền tảng đọc và nghe truyện trực tuyến với công nghệ AI
-            Text-to-Speech. Kho truyện phong phú, trải nghiệm mượt mà.
-          </p>
-
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              to="/register"
-              className="rounded-xl bg-gradient-to-r from-primary to-secondary px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
-            >
-              Bắt đầu miễn phí
-            </Link>
-            <Link
-              to="/login"
-              className="rounded-xl border border-white/10 bg-surface-light px-8 py-3.5 text-sm font-semibold text-text-primary transition-colors hover:bg-white/5"
-            >
-              Đăng nhập
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ───── Features Section ───── */}
-      <section className="border-t border-white/5 py-20">
-        <div className="mx-auto max-w-6xl px-4">
-          <h2 className="mb-12 text-center text-3xl font-bold text-text-primary">
-            Tính năng nổi bật
-          </h2>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                icon: BookOpen,
-                title: 'Kho Truyện Phong Phú',
-                description: 'Hàng nghìn truyện thuộc nhiều thể loại: tiên hiệp, ngôn tình, trinh thám, khoa học viễn tưởng...',
-                gradient: 'from-primary to-indigo-400',
-              },
-              {
-                icon: Headphones,
-                title: 'AI Đọc Truyện',
-                description: 'Công nghệ Text-to-Speech tiên tiến giúp bạn nghe truyện mọi lúc mọi nơi, rảnh tay hoàn toàn.',
-                gradient: 'from-secondary to-purple-400',
-              },
-              {
-                icon: Lock,
-                title: 'Nội Dung Độc Quyền',
-                description: 'Nâng cấp VIP để mở khóa các chương độc quyền và trải nghiệm đọc không giới hạn.',
-                gradient: 'from-accent to-orange-400',
-              },
-            ].map((feature) => (
-              <div
-                key={feature.title}
-                className="group rounded-2xl border border-white/5 bg-surface-light p-6 transition-all hover:border-white/10 hover:shadow-lg hover:shadow-primary/5"
-              >
-                <div
-                  className={`mb-4 inline-flex rounded-xl bg-gradient-to-br ${feature.gradient} p-3 shadow-lg`}
-                >
-                  <feature.icon className="h-6 w-6 text-white" />
+              {/* Content */}
+              <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-10 z-10">
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {featuredStories[currentSlide].genres.slice(0, 2).map((g) => (
+                    <span key={g} className="rounded bg-primary/20 px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-primary backdrop-blur-sm border border-primary/20">
+                      {g}
+                    </span>
+                  ))}
+                  <span className="flex items-center gap-1 rounded bg-yellow-500/20 px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-yellow-500 backdrop-blur-sm border border-yellow-500/20">
+                    <Star className="h-3 w-3" fill="currentColor" /> 4.9
+                  </span>
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-text-primary">{feature.title}</h3>
-                <p className="text-sm leading-relaxed text-text-secondary">{feature.description}</p>
+                
+                <Link to={`/stories/${featuredStories[currentSlide].id}`} className="hover:text-primary transition-colors inline-block max-w-2xl">
+                  <h2 className="text-2xl sm:text-4xl font-black text-white uppercase leading-tight line-clamp-2 mb-3 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                    {featuredStories[currentSlide].title}
+                  </h2>
+                </Link>
+                
+                <p className="text-xs sm:text-sm text-gray-300 line-clamp-2 sm:line-clamp-3 max-w-2xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] mb-6">
+                  {featuredStories[currentSlide].description || "Đang cập nhật nội dung cho truyện này. Đón xem những diễn biến hấp dẫn nhất..."}
+                </p>
+
+                <div className="flex items-center gap-4">
+                  <Link
+                    to={`/stories/${featuredStories[currentSlide].id}`}
+                    className="flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-white/10"
+                  >
+                    <PlayCircle className="h-5 w-5" />
+                    Nghe Audio
+                  </Link>
+                </div>
               </div>
+
+              {/* Navigation Arrows */}
+              <button 
+                onClick={(e) => { e.preventDefault(); prevSlide(); }}
+                className="absolute z-20 left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button 
+                onClick={(e) => { e.preventDefault(); nextSlide(); }}
+                className="absolute z-20 right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+
+              {/* Dots */}
+              <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 z-20">
+                {featuredStories.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentSlide(idx)}
+                    className={`h-1.5 rounded-full transition-all ${currentSlide === idx ? 'w-6 bg-primary' : 'w-2 bg-white/50 hover:bg-white'}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Right Leaderboard (1 column) */}
+        <div className="hidden lg:flex flex-col rounded-2xl bg-surface border border-white/5 p-5 shadow-xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            <h3 className="font-bold text-text-primary uppercase text-sm tracking-wider">Bảng xếp hạng</h3>
+          </div>
+          
+          {/* Tabs pseudo */}
+          <div className="flex gap-1 bg-surface-light p-1 rounded-lg mb-4">
+            <button className="flex-1 rounded-md bg-primary py-1.5 text-xs font-semibold text-white shadow">Ngày</button>
+            <button className="flex-1 rounded-md py-1.5 text-xs font-semibold text-text-secondary hover:text-white transition-colors">Tuần</button>
+            <button className="flex-1 rounded-md py-1.5 text-xs font-semibold text-text-secondary hover:text-white transition-colors">Tháng</button>
+          </div>
+
+          <div className="flex-1 flex flex-col gap-3 justify-center">
+            {topStories.map((story, idx) => (
+              <Link key={story.id} to={`/stories/${story.id}`} className="flex items-center gap-3 group rounded-lg p-1 transition-colors hover:bg-surface-light">
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                  idx === 0 ? 'bg-yellow-500 text-white shadow-[0_0_10px_rgba(234,179,8,0.3)]' : 
+                  idx === 1 ? 'bg-gray-400 text-white shadow-[0_0_10px_rgba(156,163,175,0.3)]' : 
+                  idx === 2 ? 'bg-amber-600 text-white shadow-[0_0_10px_rgba(217,119,6,0.3)]' : 'bg-surface-light text-text-secondary'
+                }`}>
+                  {idx + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-text-primary line-clamp-1 group-hover:text-primary transition-colors">
+                    {story.title}
+                  </h4>
+                  <p className="text-[11px] text-text-secondary line-clamp-1">{story.authorName}</p>
+                </div>
+              </Link>
             ))}
           </div>
+          
+          <Link to="/stories" className="mt-4 block text-center text-xs font-medium text-text-secondary hover:text-primary transition-colors">
+            Xem tất cả
+          </Link>
         </div>
-      </section>
+      </div>
+
+      {/* ───── Quick Actions ───── */}
+      <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        {quickActions.map((action, idx) => (
+          <Link 
+            key={idx} 
+            to={action.path}
+            className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-start justify-center gap-2 sm:gap-3 rounded-2xl border border-white/5 bg-surface p-3 sm:p-4 transition-all hover:bg-surface-light hover:scale-105 hover:shadow-lg hover:border-white/10"
+          >
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${action.color}`}>
+              <action.icon className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-semibold text-text-primary sm:mt-2">{action.label}</span>
+          </Link>
+        ))}
+      </div>
+
+      {/* ───── Recent Stories Grid ───── */}
+      <div className="mt-12">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-text-primary uppercase flex items-center gap-2">
+            <span className="w-1 h-6 bg-primary rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></span>
+            Truyện mới cập nhật
+          </h2>
+          <Link to="/stories" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+            Tất cả
+          </Link>
+        </div>
+
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {recentStories.map((story) => (
+            <Link
+              key={story.id}
+              to={`/stories/${story.id}`}
+              className="group flex flex-col gap-2 rounded-xl border border-white/5 bg-surface-light p-2.5 transition-all hover:border-white/15 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
+            >
+              {/* Cover */}
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface">
+                {story.coverImage ? (
+                  <img
+                    src={story.coverImage}
+                    alt={story.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                    <BookOpen className="h-10 w-10 text-white/20" />
+                  </div>
+                )}
+                
+                {/* Overlay details */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 sm:p-3">
+                  <span className="text-[10px] sm:text-xs text-white line-clamp-2 font-medium drop-shadow-md leading-relaxed">
+                    {story.genres.join(', ')}
+                  </span>
+                </div>
+                
+                {/* Status */}
+                <span className={`absolute right-1.5 top-1.5 rounded bg-black/70 backdrop-blur px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-white border border-white/10`}>
+                  {story.status === 'COMPLETED' ? 'FULL' : 'ĐANG RA'}
+                </span>
+              </div>
+
+              {/* Info */}
+              <div className="flex flex-col gap-0.5 px-1 pb-1">
+                <h3 className="line-clamp-2 text-sm font-bold text-text-primary transition-colors group-hover:text-primary leading-tight">
+                  {story.title}
+                </h3>
+                <p className="text-[11px] text-text-secondary line-clamp-1 mt-1">
+                  {story.authorName}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -113,7 +113,7 @@ export default function ChapterReadPage() {
         setAudioData(res.data);
         // Force autoPlay when user explicitly generates TTS
         window.history.replaceState({ ...window.history.state, usr: { autoPlay: true } }, '');
-        toast.success('Tạo giọng đọc AI thành công!');
+        toast.success('Tạo audio thành công!');
       } catch (err) {
         const error = err as AxiosError<ErrorResponse>;
         toast.error(error.response?.data?.message || 'Tạo audio thất bại, vui lòng thử lại');
@@ -245,13 +245,20 @@ export default function ChapterReadPage() {
         <div />
       )}
 
-      <Link
-        to={`/stories/${chapter.storyId}`}
-        className="flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
-      >
-        <BookOpen className="h-4 w-4" />
-        <span className="hidden sm:inline">Mục lục</span>
-      </Link>
+      <div className="relative flex items-center">
+        <select
+          value={chapter.id}
+          onChange={(e) => navigate(`/chapters/${e.target.value}`)}
+          className="appearance-none rounded-xl border border-white/10 bg-surface px-8 py-2.5 text-sm text-text-secondary outline-none transition-colors hover:bg-white/5 hover:text-text-primary focus:border-primary/50"
+        >
+          {allChapters.map(c => (
+            <option key={c.id} value={c.id}>
+              Chương {c.chapterNumber}
+            </option>
+          ))}
+        </select>
+        <BookOpen className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+      </div>
 
       {nextChapter ? (
         <Link
@@ -297,9 +304,6 @@ export default function ChapterReadPage() {
           />
         </div>
       )}
-
-      {/* Top navigation */}
-      <ChapterNav />
 
       {/* Chapter content */}
       <article className="my-8 rounded-2xl border border-white/10 bg-surface-light p-6 sm:p-8 lg:p-10">

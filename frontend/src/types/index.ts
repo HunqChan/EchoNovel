@@ -64,6 +64,21 @@ export interface GenreResponse {
   name: string;
 }
 
+export interface GenreRequest {
+  name: string;
+}
+
+// ========== Author Types ==========
+
+export interface AuthorResponse {
+  id: number;
+  name: string;
+}
+
+export interface AuthorRequest {
+  name: string;
+}
+
 // ========== Story Types ==========
 
 export interface StoryResponse {
@@ -122,4 +137,20 @@ export interface AudioFileResponse {
   source: 'UPLOAD' | 'TTS';
   duration: number;
   createdAt: string;
+}
+
+// ========== Stats Types ==========
+
+export interface TopStoryStat {
+  title: string;
+  chapterCount: number;
+}
+
+export interface AdminStatsResponse {
+  totalStories: number;
+  totalChapters: number;
+  totalUsers: number;
+  totalVipUsers: number;
+  accessLevelDistribution: Record<string, number>;
+  topStories: TopStoryStat[];
 }

@@ -19,7 +19,10 @@ import ChapterReadPage from './pages/ChapterReadPage';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPlaceholder from './pages/admin/AdminPlaceholder';
+import AdminStoriesPage from './pages/admin/AdminStoriesPage';
+import AdminGenresPage from './pages/admin/AdminGenresPage';
+import AdminAuthorsPage from './pages/admin/AdminAuthorsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
 
 import './index.css';
 
@@ -51,11 +54,10 @@ function App() {
           <Route element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
               <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/stories" element={<AdminPlaceholder />} />
-              <Route path="/admin/chapters" element={<AdminPlaceholder />} />
-              <Route path="/admin/genres" element={<AdminPlaceholder />} />
-              <Route path="/admin/authors" element={<AdminPlaceholder />} />
-              <Route path="/admin/users" element={<AdminPlaceholder />} />
+              <Route path="/admin/stories" element={<AdminStoriesPage />} />
+              <Route path="/admin/genres" element={<AdminGenresPage />} />
+              <Route path="/admin/authors" element={<AdminAuthorsPage />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
             </Route>
           </Route>
         </Routes>

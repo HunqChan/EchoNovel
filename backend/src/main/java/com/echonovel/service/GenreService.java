@@ -27,6 +27,7 @@ public class GenreService {
     public List<GenreResponse> getAllGenres() {
         return genreRepository.findAll()
                 .stream()
+                .sorted(java.util.Comparator.comparing(Genre::getId))
                 .map(GenreResponse::fromEntity)
                 .collect(Collectors.toList());
     }

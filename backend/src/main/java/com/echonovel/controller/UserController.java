@@ -1,6 +1,7 @@
 package com.echonovel.controller;
 
 import com.echonovel.dto.ApiResponse;
+import com.echonovel.dto.request.UserUpdateRequest;
 import com.echonovel.dto.request.VipUpdateRequest;
 import com.echonovel.dto.response.UserResponse;
 import com.echonovel.service.UserService;
@@ -22,5 +23,24 @@ public class UserController {
             @Valid @RequestBody VipUpdateRequest request) {
         UserResponse data = userService.updateUserVipStatus(userId, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái VIP thành công", data));
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+            @PathVariable Long userId,
+            @Valid @RequestBody UserUpdateRequest request) {
+        UserResponse data = userService.updateUser(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin người dùng thành công", data));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<java.util.List<UserResponse>>> getAllUsers() {
+        return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers()));
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(ApiResponse.success("Xóa người dùng thành công", null));
     }
 }

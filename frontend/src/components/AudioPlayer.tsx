@@ -154,7 +154,7 @@ export default function AudioPlayer({
           <div className="text-center sm:text-left">
             <p className="text-sm font-medium text-text-primary">🎧 Nghe truyện</p>
             <p className="mt-0.5 text-xs text-text-secondary">
-              Chương này chưa có audio. Tạo giọng đọc AI miễn phí!
+              Chương này chưa có audio. Hãy tạo audio để nghe!
             </p>
           </div>
 
@@ -198,13 +198,13 @@ export default function AudioPlayer({
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="hidden sm:inline">Đang tạo giọng đọc AI...</span>
+                  <span className="hidden sm:inline">Đang tạo audio...</span>
                   <span className="sm:hidden">Đang tạo...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
-                  Nghe bằng AI
+                  Tạo Audio
                 </>
               )}
             </button>
