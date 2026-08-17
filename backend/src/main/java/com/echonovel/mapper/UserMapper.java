@@ -33,6 +33,8 @@ public class UserMapper {
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .isVip(user.getIsVip())
+                .provider(user.getProvider())
+                .avatarUrl(user.getAvatarUrl())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

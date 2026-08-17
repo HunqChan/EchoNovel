@@ -30,4 +30,24 @@ public interface UserService {
      * Delete user (Admin).
      */
     void deleteUser(Long userId);
+
+    /**
+     * Get current user profile.
+     */
+    UserResponse getCurrentUserProfile(String email);
+
+    /**
+     * Update current user profile.
+     */
+    UserResponse updateProfile(String email, com.echonovel.dto.request.UserProfileUpdateRequest request);
+
+    /**
+     * Send OTP for change password.
+     */
+    void sendChangePasswordOtp(String email);
+
+    /**
+     * Change password with OTP.
+     */
+    void changePassword(String email, com.echonovel.dto.request.ChangePasswordRequest request);
 }

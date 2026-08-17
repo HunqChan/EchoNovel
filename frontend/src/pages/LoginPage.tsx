@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
 import { BookOpen, Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '../types';
 
@@ -21,9 +22,9 @@ export default function LoginPage() {
 
     try {
       const response = await authService.login({ email, password });
-      const { token, user } = response.data;
+      const { token, refreshToken, user } = response.data;
 
-      login(token, user);
+      login(token, refreshToken, user);
       toast.success(`Xin chào, ${user.username}!`);
 
       // Redirect based on role
@@ -86,9 +87,14 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-text-secondary">
-                Mật khẩu
-              </label>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label htmlFor="login-password" className="block text-sm font-medium text-text-secondary">
+                  Mật khẩu
+                </label>
+                <Link to="/forgot-password" className="text-xs text-primary hover:text-secondary transition-colors">
+                  Quên mật khẩu?
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   id="login-password"
@@ -125,6 +131,45 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-surface-light px-2 text-text-secondary">Hoặc tiếp tục với</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center overflow-hidden rounded-xl">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    try {
+                      setLoading(true);
+                      const response = await authService.googleLogin({ token: credentialResponse.credential });
+                      const { token, refreshToken, user } = response.data;
+                      login(token, refreshToken, user);
+                      toast.success(`Xin chào, ${user.username}!`);
+                      navigate(user.role === 'ADMIN' ? '/admin' : '/');
+                    } catch (err: any) {
+                      toast.error(err.response?.data?.message || 'Đăng nhập Google thất bại');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }
+                }}
+                onError={() => {
+                  toast.error('Đăng nhập Google thất bại');
+                }}
+                theme="filled_black"
+                shape="pill"
+                text="continue_with"
+                width="300"
+              />
+            </div>
+          </div>
 
           {/* Footer */}
           <p className="mt-6 text-center text-sm text-text-secondary">

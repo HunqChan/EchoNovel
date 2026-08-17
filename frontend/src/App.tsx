@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Layouts
 import MainLayout from './components/MainLayout';
@@ -13,6 +14,8 @@ import { ProtectedRoute, AdminRoute } from './components/RouteGuards';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ProfilePage from './pages/ProfilePage';
 import StoryListPage from './pages/StoryListPage';
 import StoryDetailPage from './pages/StoryDetailPage';
 import ChapterReadPage from './pages/ChapterReadPage';
@@ -27,9 +30,12 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import './index.css';
 
 function App() {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
   return (
-    <AuthProvider>
-      <Router>
+    <GoogleOAuthProvider clientId={clientId}>
+      <AuthProvider>
+        <Router>
         <Routes>
           {/* ═══════ Public routes with MainLayout ═══════ */}
           <Route element={<MainLayout />}>
@@ -42,11 +48,12 @@ function App() {
           {/* ═══════ Auth routes (no layout) ═══════ */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* ═══════ Protected routes (requires auth) ═══════ */}
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
-              {/* Future protected user pages go here */}
+              <Route path="/profile" element={<ProfilePage />} />
             </Route>
           </Route>
 
@@ -89,7 +96,8 @@ function App() {
           },
         }}
       />
-    </AuthProvider>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

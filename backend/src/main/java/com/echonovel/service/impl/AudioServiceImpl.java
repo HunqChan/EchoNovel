@@ -59,7 +59,7 @@ public class AudioServiceImpl implements AudioService {
     public Optional<AudioFileResponse> getAudioByChapterId(Long chapterId) {
         Chapter chapter = findChapterAndCheckAccess(chapterId);
 
-        return audioFileRepository.findByChapterId(chapterId)
+        return audioFileRepository.findFirstByChapterIdOrderByIdDesc(chapterId)
                 .map(audio -> audioFileMapper.toResponse(audio, baseUrl));
     }
 
@@ -72,7 +72,7 @@ public class AudioServiceImpl implements AudioService {
         Chapter chapter = findChapterAndCheckAccess(chapterId);
 
         // Check cache: if audio already exists, return it
-        Optional<AudioFile> existing = audioFileRepository.findByChapterId(chapterId);
+        Optional<AudioFile> existing = audioFileRepository.findFirstByChapterIdOrderByIdDesc(chapterId);
         if (existing.isPresent()) {
             log.info("Audio cache hit for chapter ID: {}", chapterId);
             return audioFileMapper.toResponse(existing.get(), baseUrl);
@@ -116,7 +116,7 @@ public class AudioServiceImpl implements AudioService {
                 .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
 
         // Delete existing audio if any
-        audioFileRepository.findByChapterId(chapterId).ifPresent(existing -> {
+        audioFileRepository.findAllByChapterId(chapterId).forEach(existing -> {
             deletePhysicalFile(existing.getFilePath());
             audioFileRepository.delete(existing);
             log.info("Replaced existing audio for chapter ID: {}", chapterId);

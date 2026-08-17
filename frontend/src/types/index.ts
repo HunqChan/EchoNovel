@@ -40,10 +40,33 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface GoogleAuthRequest {
+  token: string;
+}
+
 export interface AuthResponse {
   token: string;
+  refreshToken: string;
   type: string;
   user: UserResponse;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface LogoutRequest {
+  refreshToken: string;
 }
 
 // ========== User Types ==========
@@ -54,7 +77,20 @@ export interface UserResponse {
   email: string;
   role: 'ADMIN' | 'MEMBER';
   isVip: boolean;
+  avatarUrl?: string;
+  provider?: string;
   createdAt: string;
+}
+
+export interface UserProfileUpdateRequest {
+  username: string;
+  avatarUrl?: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  otp: string;
+  newPassword: string;
 }
 
 // ========== Genre Types ==========

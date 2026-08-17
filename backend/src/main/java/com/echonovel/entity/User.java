@@ -38,6 +38,16 @@ public class User {
     @Builder.Default
     private Boolean isVip = false;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Column(name = "provider", length = 20)
+    @Builder.Default
+    private String provider = "LOCAL";
+
+    @Column(name = "provider_id")
+    private String providerId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

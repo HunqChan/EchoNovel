@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
 import { BookOpen, Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '../types';
 
@@ -34,9 +35,9 @@ export default function RegisterPage() {
 
     try {
       const response = await authService.register({ username, email, password });
-      const { token, user } = response.data;
+      const { token, refreshToken, user } = response.data;
 
-      login(token, user);
+      login(token, refreshToken, user);
       toast.success('Đăng ký thành công! Chào mừng bạn đến với EchoNovel 🎉');
       navigate('/');
     } catch (err) {
@@ -171,6 +172,45 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-surface-light px-2 text-text-secondary">Hoặc tiếp tục với</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center overflow-hidden rounded-xl">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    try {
+                      setLoading(true);
+                      const response = await authService.googleLogin({ token: credentialResponse.credential });
+                      const { token, refreshToken, user } = response.data;
+                      login(token, refreshToken, user);
+                      toast.success(`Đăng ký bằng Google thành công! Xin chào, ${user.username}!`);
+                      navigate(user.role === 'ADMIN' ? '/admin' : '/');
+                    } catch (err: any) {
+                      toast.error(err.response?.data?.message || 'Đăng nhập Google thất bại');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }
+                }}
+                onError={() => {
+                  toast.error('Đăng nhập Google thất bại');
+                }}
+                theme="filled_black"
+                shape="pill"
+                text="continue_with"
+                width="300"
+              />
+            </div>
+          </div>
 
           {/* Footer */}
           <p className="mt-6 text-center text-sm text-text-secondary">

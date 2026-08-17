@@ -13,6 +13,7 @@ public enum ErrorCode {
     INVALID_CREDENTIALS("INVALID_CREDENTIALS", "Email hoặc mật khẩu không chính xác", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED("UNAUTHORIZED", "Bạn chưa đăng nhập", HttpStatus.UNAUTHORIZED),
     ACCESS_DENIED("ACCESS_DENIED", "Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
+    INVALID_OTP("INVALID_OTP", "Mã OTP không chính xác hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
 
     // ========== JWT ==========
     INVALID_TOKEN("INVALID_TOKEN", "Token không hợp lệ", HttpStatus.UNAUTHORIZED),

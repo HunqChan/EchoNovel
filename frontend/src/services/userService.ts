@@ -21,4 +21,24 @@ export const userService = {
     const response = await api.delete<ApiResponse<void>>(`/admin/users/${userId}`);
     return response.data;
   },
+
+  getProfile: async (): Promise<ApiResponse<UserResponse>> => {
+    const response = await api.get<ApiResponse<UserResponse>>('/users/profile');
+    return response.data;
+  },
+
+  updateProfile: async (data: import('../types').UserProfileUpdateRequest): Promise<ApiResponse<UserResponse>> => {
+    const response = await api.put<ApiResponse<UserResponse>>('/users/profile', data);
+    return response.data;
+  },
+
+  sendChangePasswordOtp: async (): Promise<ApiResponse<void>> => {
+    const response = await api.post<ApiResponse<void>>('/users/change-password/send-otp');
+    return response.data;
+  },
+
+  changePassword: async (data: import('../types').ChangePasswordRequest): Promise<ApiResponse<void>> => {
+    const response = await api.post<ApiResponse<void>>('/users/change-password', data);
+    return response.data;
+  },
 };

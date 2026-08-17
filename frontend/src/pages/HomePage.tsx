@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PlayCircle, Headphones, Trophy, Grid, Bell, Star, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { Headphones, Trophy, Grid, Bell, Star, BookOpen } from 'lucide-react';
 import { storyService } from '../services/storyService';
 import type { StoryResponse } from '../types';
+import HeroSlider from '../components/HeroSlider';
 
 export default function HomePage() {
   const [featuredStories, setFeaturedStories] = useState<StoryResponse[]>([]);
   const [recentStories, setRecentStories] = useState<StoryResponse[]>([]);
   const [topStories, setTopStories] = useState<StoryResponse[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,18 +32,6 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  // Auto carousel
-  useEffect(() => {
-    if (featuredStories.length === 0) return;
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % featuredStories.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [featuredStories]);
-
-  const nextSlide = () => setCurrentSlide((p) => (p + 1) % featuredStories.length);
-  const prevSlide = () => setCurrentSlide((p) => (p - 1 + featuredStories.length) % featuredStories.length);
-
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
@@ -64,78 +52,8 @@ export default function HomePage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* ───── Hero & Leaderboard Grid ───── */}
       <div className="grid gap-6 lg:grid-cols-4">
-        {/* Main Carousel (Left 3 columns) */}
-        <div className="lg:col-span-3 relative overflow-hidden rounded-2xl bg-surface shadow-2xl aspect-[16/9] sm:aspect-[21/9] group">
-          {featuredStories.length > 0 && (
-            <>
-              {/* Background Blur Image */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50 transition-transform duration-1000 group-hover:scale-105 blur-[2px]"
-                style={{ backgroundImage: `url(${featuredStories[currentSlide].coverImage || 'https://via.placeholder.com/800'})` }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
-
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-10 z-10">
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {featuredStories[currentSlide].genres.slice(0, 2).map((g) => (
-                    <span key={g} className="rounded bg-primary/20 px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-primary backdrop-blur-sm border border-primary/20">
-                      {g}
-                    </span>
-                  ))}
-                  <span className="flex items-center gap-1 rounded bg-yellow-500/20 px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-yellow-500 backdrop-blur-sm border border-yellow-500/20">
-                    <Star className="h-3 w-3" fill="currentColor" /> 4.9
-                  </span>
-                </div>
-                
-                <Link to={`/stories/${featuredStories[currentSlide].id}`} className="hover:text-primary transition-colors inline-block max-w-2xl">
-                  <h2 className="text-2xl sm:text-4xl font-black text-white uppercase leading-tight line-clamp-2 mb-3 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                    {featuredStories[currentSlide].title}
-                  </h2>
-                </Link>
-                
-                <p className="text-xs sm:text-sm text-gray-300 line-clamp-2 sm:line-clamp-3 max-w-2xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] mb-6">
-                  {featuredStories[currentSlide].description || "Đang cập nhật nội dung cho truyện này. Đón xem những diễn biến hấp dẫn nhất..."}
-                </p>
-
-                <div className="flex items-center gap-4">
-                  <Link
-                    to={`/stories/${featuredStories[currentSlide].id}`}
-                    className="flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-white/10"
-                  >
-                    <PlayCircle className="h-5 w-5" />
-                    Nghe Audio
-                  </Link>
-                </div>
-              </div>
-
-              {/* Navigation Arrows */}
-              <button 
-                onClick={(e) => { e.preventDefault(); prevSlide(); }}
-                className="absolute z-20 left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              <button 
-                onClick={(e) => { e.preventDefault(); nextSlide(); }}
-                className="absolute z-20 right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-
-              {/* Dots */}
-              <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 z-20">
-                {featuredStories.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentSlide(idx)}
-                    className={`h-1.5 rounded-full transition-all ${currentSlide === idx ? 'w-6 bg-primary' : 'w-2 bg-white/50 hover:bg-white'}`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+        <div className="lg:col-span-3">
+          <HeroSlider stories={featuredStories} />
         </div>
 
         {/* Right Leaderboard (1 column) */}

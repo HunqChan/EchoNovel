@@ -18,5 +18,7 @@ public class UserResponse {
     private String email;
     private String role;
     private Boolean isVip;
+    private String provider;
+    private String avatarUrl;
     private LocalDateTime createdAt;
 }

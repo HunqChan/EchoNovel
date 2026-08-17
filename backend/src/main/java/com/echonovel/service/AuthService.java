@@ -18,4 +18,29 @@ public interface AuthService {
      * Login with email and password.
      */
     AuthResponse login(LoginRequest request);
+
+    /**
+     * Send OTP for forgot password
+     */
+    void sendForgotPasswordOtp(com.echonovel.dto.request.ForgotPasswordRequest request);
+
+    /**
+     * Reset password with OTP
+     */
+    void resetPassword(com.echonovel.dto.request.ResetPasswordRequest request);
+
+    /**
+     * Google Login/Register
+     */
+    AuthResponse googleLogin(com.echonovel.dto.request.GoogleAuthRequest request);
+
+    /**
+     * Refresh Access Token
+     */
+    AuthResponse refreshAccessToken(com.echonovel.dto.request.RefreshTokenRequest request);
+
+    /**
+     * Logout
+     */
+    void logout(com.echonovel.dto.request.LogoutRequest request);
 }

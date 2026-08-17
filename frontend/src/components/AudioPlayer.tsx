@@ -7,6 +7,7 @@ import {
   Volume2,
   VolumeX,
   SkipForward,
+  SkipBack,
   Repeat,
   Sparkles,
   Loader2,
@@ -20,6 +21,10 @@ interface AudioPlayerProps {
   isGenerating: boolean;
   /** Called when audio finishes playing (for auto-next) */
   onEnded?: () => void;
+  /** Called when user wants to go to previous chapter */
+  onPrevious?: () => void;
+  /** Called when user wants to go to next chapter manually */
+  onNext?: () => void;
   /** Called when user wants to generate TTS */
   onRequestTts?: (voice: string) => void;
   /** Auto-continue toggle */
@@ -46,6 +51,8 @@ export default function AudioPlayer({
   chapterTitle,
   isGenerating,
   onEnded,
+  onPrevious,
+  onNext,
   onRequestTts,
   autoContinue,
   onAutoContinueChange,
@@ -59,8 +66,10 @@ export default function AudioPlayer({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
 
   // Update time
   useEffect(() => {
@@ -89,6 +98,7 @@ export default function AudioPlayer({
   useEffect(() => {
     if (audioUrl && audioRef.current) {
       audioRef.current.load();
+      audioRef.current.playbackRate = playbackRate;
       if (autoPlay) {
         audioRef.current
           .play()
@@ -144,6 +154,14 @@ export default function AudioPlayer({
     setIsMuted(val === 0);
   };
 
+  const handleSpeedSelect = (rate: number) => {
+    setPlaybackRate(rate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+    setShowSpeedMenu(false);
+  };
+
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   // ───── No audio: Show TTS button ─────
@@ -170,22 +188,28 @@ export default function AudioPlayer({
               </button>
 
               {showVoiceMenu && (
-                <div className="absolute right-0 top-full z-10 mt-1 w-48 rounded-xl border border-white/10 bg-surface-light py-1 shadow-xl">
-                  {VOICES.map((voice) => (
-                    <button
-                      key={voice.id}
-                      onClick={() => {
-                        setSelectedVoice(voice.id);
-                        setShowVoiceMenu(false);
-                      }}
-                      className={`w-full px-4 py-2 text-left text-sm transition-colors hover:bg-white/5 ${
-                        selectedVoice === voice.id ? 'text-primary font-medium' : 'text-text-secondary'
-                      }`}
-                    >
-                      {voice.label}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowVoiceMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-xl border border-white/10 bg-surface-light py-1 shadow-xl">
+                    {VOICES.map((voice) => (
+                      <button
+                        key={voice.id}
+                        onClick={() => {
+                          setSelectedVoice(voice.id);
+                          setShowVoiceMenu(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left text-sm transition-colors hover:bg-white/5 ${
+                          selectedVoice === voice.id ? 'text-primary font-medium' : 'text-text-secondary'
+                        }`}
+                      >
+                        {voice.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 
@@ -263,7 +287,7 @@ export default function AudioPlayer({
       {/* Controls */}
       <div className="flex items-center justify-between">
         {/* Left: Volume */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center gap-2 justify-start">
           <button
             onClick={toggleMute}
             className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
@@ -286,40 +310,80 @@ export default function AudioPlayer({
         </div>
 
         {/* Center: Playback controls */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-2">
+          <button
+            onClick={onPrevious || undefined}
+            disabled={!onPrevious}
+            className={`rounded-lg p-1.5 sm:p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary ${!onPrevious ? 'invisible pointer-events-none' : ''}`}
+            title="Chương trước"
+          >
+            <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+
           <button
             onClick={() => skip(-10)}
-            className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
+            className="rounded-lg p-1.5 sm:p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
             title="Lùi 10 giây"
           >
-            <RotateCcw className="h-5 w-5" />
+            <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
 
           <button
             onClick={togglePlay}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 mx-1"
           >
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
+            {isPlaying ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="ml-1 h-4 w-4 sm:h-5 sm:w-5" />}
           </button>
 
           <button
             onClick={() => skip(10)}
-            className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
+            className="rounded-lg p-1.5 sm:p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
             title="Tiến 10 giây"
           >
-            <RotateCw className="h-5 w-5" />
+            <RotateCw className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+
+          <button
+            onClick={onNext || undefined}
+            disabled={!onNext}
+            className={`rounded-lg p-1.5 sm:p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary ${!onNext ? 'invisible pointer-events-none' : ''}`}
+            title="Chương tiếp"
+          >
+            <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
-        {/* Right: Next chapter shortcut */}
-        <div className="flex items-center">
+        {/* Right: Speed control */}
+        <div className="flex flex-1 items-center justify-end relative">
           <button
-            onClick={onEnded}
-            className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
-            title="Chương tiếp"
+            onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+            className="flex h-7 w-10 sm:h-8 sm:w-12 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs sm:text-sm font-medium text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary"
+            title="Tốc độ phát"
           >
-            <SkipForward className="h-4 w-4" />
+            {playbackRate}x
           </button>
+
+          {showSpeedMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowSpeedMenu(false)}
+              />
+              <div className="absolute bottom-full right-0 mb-2 w-16 rounded-xl border border-white/10 bg-surface-light py-1 shadow-xl z-20">
+                {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                  <button
+                    key={rate}
+                    onClick={() => handleSpeedSelect(rate)}
+                    className={`w-full px-2 py-1.5 text-center text-sm transition-colors hover:bg-white/5 ${
+                      playbackRate === rate ? 'text-primary font-medium' : 'text-text-secondary'
+                    }`}
+                  >
+                    {rate}x
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

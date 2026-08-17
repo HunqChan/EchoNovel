@@ -137,6 +137,18 @@ export default function ChapterReadPage() {
     }
   }, [autoContinue, nextChapter, navigate]);
 
+  const handleNextChapter = useCallback(() => {
+    if (nextChapter) {
+      navigate(`/chapters/${nextChapter.id}`, { state: { autoPlay: true } });
+    }
+  }, [nextChapter, navigate]);
+
+  const handlePreviousChapter = useCallback(() => {
+    if (prevChapter) {
+      navigate(`/chapters/${prevChapter.id}`, { state: { autoPlay: true } });
+    }
+  }, [prevChapter, navigate]);
+
   // Determine if we should autoPlay audio based on navigation state or generation success
   const shouldAutoPlay = window.history.state?.usr?.autoPlay === true;
 
@@ -233,26 +245,26 @@ export default function ChapterReadPage() {
 
   const ChapterNav = () => (
     <div className="flex items-center justify-between gap-4">
-      {prevChapter ? (
-        <Link
-          to={`/chapters/${prevChapter.id}`}
-          className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-text-secondary transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Chương trước</span>
-        </Link>
-      ) : (
-        <div />
-      )}
+      <div className="flex flex-1 justify-start">
+        {prevChapter && (
+          <Link
+            to={`/chapters/${prevChapter.id}`}
+            className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-text-secondary transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Chương trước</span>
+          </Link>
+        )}
+      </div>
 
-      <div className="relative flex items-center">
+      <div className="relative flex items-center justify-center">
         <select
           value={chapter.id}
           onChange={(e) => navigate(`/chapters/${e.target.value}`)}
           className="appearance-none rounded-xl border border-white/10 bg-surface px-8 py-2.5 text-sm text-text-secondary outline-none transition-colors hover:bg-white/5 hover:text-text-primary focus:border-primary/50"
         >
           {allChapters.map(c => (
-            <option key={c.id} value={c.id}>
+            <option key={c.id} value={c.id} className="bg-gray-900 text-white">
               Chương {c.chapterNumber}
             </option>
           ))}
@@ -260,17 +272,17 @@ export default function ChapterReadPage() {
         <BookOpen className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
       </div>
 
-      {nextChapter ? (
-        <Link
-          to={`/chapters/${nextChapter.id}`}
-          className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-text-secondary transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-        >
-          <span className="hidden sm:inline">Chương sau</span>
-          <ChevronRight className="h-4 w-4" />
-        </Link>
-      ) : (
-        <div />
-      )}
+      <div className="flex flex-1 justify-end">
+        {nextChapter && (
+          <Link
+            to={`/chapters/${nextChapter.id}`}
+            className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-text-secondary transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+          >
+            <span className="hidden sm:inline">Chương sau</span>
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        )}
+      </div>
     </div>
   );
 
@@ -297,6 +309,8 @@ export default function ChapterReadPage() {
             chapterTitle={`Chương ${chapter.chapterNumber}: ${chapter.title?.normalize('NFC')}`}
             isGenerating={ttsGenerating}
             onEnded={handleAudioEnded}
+            onPrevious={prevChapter ? handlePreviousChapter : undefined}
+            onNext={nextChapter ? handleNextChapter : undefined}
             onRequestTts={handleGenerateTts}
             autoContinue={autoContinue}
             onAutoContinueChange={setAutoContinue}

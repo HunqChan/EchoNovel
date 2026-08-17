@@ -9,7 +9,9 @@ import java.util.Optional;
 @Repository
 public interface AudioFileRepository extends JpaRepository<AudioFile, Long> {
 
-    Optional<AudioFile> findByChapterId(Long chapterId);
+    Optional<AudioFile> findFirstByChapterIdOrderByIdDesc(Long chapterId);
+
+    java.util.List<AudioFile> findAllByChapterId(Long chapterId);
 
     boolean existsByChapterId(Long chapterId);
 }
