@@ -1,6 +1,5 @@
 package com.echonovel.dto.response;
 
-import com.echonovel.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,15 +19,4 @@ public class UserResponse {
     private String role;
     private Boolean isVip;
     private LocalDateTime createdAt;
-
-    public static UserResponse fromEntity(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .isVip(user.getIsVip())
-                .createdAt(user.getCreatedAt())
-                .build();
-    }
 }

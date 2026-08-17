@@ -1,6 +1,5 @@
 package com.echonovel.dto.response;
 
-import com.echonovel.entity.AudioFile;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,17 +21,4 @@ public class AudioFileResponse {
     private String source;
     private Integer duration;
     private LocalDateTime createdAt;
-
-    public static AudioFileResponse fromEntity(AudioFile audioFile, String baseUrl) {
-        return AudioFileResponse.builder()
-                .id(audioFile.getId())
-                .chapterId(audioFile.getChapter().getId())
-                .chapterTitle(audioFile.getChapter().getTitle())
-                .filePath(audioFile.getFilePath())
-                .audioUrl(baseUrl + "/" + audioFile.getFilePath())
-                .source(audioFile.getSource().name())
-                .duration(audioFile.getDuration())
-                .createdAt(audioFile.getCreatedAt())
-                .build();
-    }
 }
