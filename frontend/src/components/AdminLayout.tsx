@@ -12,6 +12,7 @@ import {
   UserCircle,
   Users,
   PenTool,
+  Crown
 } from 'lucide-react';
 
 const sidebarLinks = [
@@ -20,6 +21,7 @@ const sidebarLinks = [
   { to: '/admin/genres', label: 'Thể loại', icon: Tags },
   { to: '/admin/authors', label: 'Tác giả', icon: PenTool },
   { to: '/admin/users', label: 'Người dùng', icon: Users },
+  { to: '/admin/vip-packages', label: 'Gói VIP', icon: Crown },
 ];
 
 export default function AdminLayout() {

@@ -19,6 +19,7 @@ import ProfilePage from './pages/ProfilePage';
 import StoryListPage from './pages/StoryListPage';
 import StoryDetailPage from './pages/StoryDetailPage';
 import ChapterReadPage from './pages/ChapterReadPage';
+import UpgradeVipPage from './pages/UpgradeVipPage';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -26,6 +27,7 @@ import AdminStoriesPage from './pages/admin/AdminStoriesPage';
 import AdminGenresPage from './pages/admin/AdminGenresPage';
 import AdminAuthorsPage from './pages/admin/AdminAuthorsPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminVipPackagesPage from './pages/admin/AdminVipPackagesPage';
 
 import './index.css';
 
@@ -43,6 +45,7 @@ function App() {
             <Route path="/stories" element={<StoryListPage />} />
             <Route path="/stories/:id" element={<StoryDetailPage />} />
             <Route path="/chapters/:id" element={<ChapterReadPage />} />
+            <Route path="/upgrade" element={<UpgradeVipPage />} />
           </Route>
 
           {/* ═══════ Auth routes (no layout) ═══════ */}
@@ -65,6 +68,7 @@ function App() {
               <Route path="/admin/genres" element={<AdminGenresPage />} />
               <Route path="/admin/authors" element={<AdminAuthorsPage />} />
               <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/admin/vip-packages" element={<AdminVipPackagesPage />} />
             </Route>
           </Route>
         </Routes>

@@ -12,7 +12,7 @@ export const userService = {
     return response.data;
   },
 
-  updateUser: async (userId: number, data: { role: string; isVip: boolean }): Promise<ApiResponse<UserResponse>> => {
+  updateUser: async (userId: number, data: { role: string; vipType: string }): Promise<ApiResponse<UserResponse>> => {
     const response = await api.put<ApiResponse<UserResponse>>(`/admin/users/${userId}`, data);
     return response.data;
   },

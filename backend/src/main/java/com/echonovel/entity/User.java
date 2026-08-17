@@ -1,6 +1,7 @@
 package com.echonovel.entity;
 
 import com.echonovel.enums.Role;
+import com.echonovel.enums.VipType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,9 +35,17 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    @Column(name = "is_vip", nullable = false)
+    @Column(nullable = false)
     @Builder.Default
-    private Boolean isVip = false;
+    private Long coins = 0L;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "vip_type", nullable = false, length = 20)
+    @Builder.Default
+    private VipType vipType = VipType.NONE;
+
+    @Column(name = "vip_expire_at")
+    private LocalDateTime vipExpireAt;
 
     @Column(name = "avatar_url")
     private String avatarUrl;

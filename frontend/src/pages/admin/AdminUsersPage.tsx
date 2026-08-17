@@ -54,8 +54,9 @@ const roleOptions = [
 ];
 
 const vipOptions = [
-  { value: true, label: 'VIP' },
-  { value: false, label: 'Thường' }
+  { value: 'NONE', label: 'Thường (NONE)' },
+  { value: 'SUBSCRIPTION', label: 'Có thời hạn (SUBSCRIPTION)' },
+  { value: 'PERMANENT', label: 'Vĩnh viễn (PERMANENT)' }
 ];
 
 export default function AdminUsersPage() {
@@ -74,8 +75,15 @@ export default function AdminUsersPage() {
     isOpen: boolean;
     user: UserResponse | null;
     role: string;
-    isVip: boolean;
-  }>({ isOpen: false, user: null, role: 'MEMBER', isVip: false });
+    vipType: string;
+  }>({ isOpen: false, user: null, role: 'MEMBER', vipType: 'NONE' });
+
+  const [addCoinsModal, setAddCoinsModal] = useState<{
+    isOpen: boolean;
+    user: UserResponse | null;
+    amount: number;
+    description: string;
+  }>({ isOpen: false, user: null, amount: 0, description: 'Admin cấp xu' });
 
   const fetchUsers = () => {
     setLoading(true);
@@ -93,28 +101,7 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, []);
 
-  const openVipConfirm = (user: UserResponse) => {
-    if (user.role === 'ADMIN') {
-      toast.error('Không thể thay đổi quyền của Admin!');
-      return;
-    }
-    const newVipStatus = !user.isVip;
-    setConfirmModal({
-      isOpen: true,
-      title: 'Xác nhận thay đổi VIP',
-      message: `Bạn có chắc chắn muốn ${newVipStatus ? 'cấp' : 'hủy'} quyền VIP cho người dùng "${user.username}" không?`,
-      action: async () => {
-        try {
-          await userService.toggleVip(user.id, newVipStatus);
-          toast.success(`Đã ${newVipStatus ? 'cấp' : 'hủy'} quyền VIP cho ${user.username}`);
-          fetchUsers();
-        } catch (err) {
-          toast.error('Lỗi cập nhật quyền VIP');
-        }
-        setConfirmModal(prev => ({ ...prev, isOpen: false }));
-      }
-    });
-  };
+  // Không dùng toggleVip cũ nữa, dùng update user chung
 
   const openDeleteConfirm = (user: UserResponse) => {
     if (user.role === 'ADMIN') {
@@ -143,7 +130,7 @@ export default function AdminUsersPage() {
       isOpen: true,
       user,
       role: user.role,
-      isVip: user.isVip
+      vipType: user.vipType || 'NONE'
     });
   };
 
@@ -151,17 +138,35 @@ export default function AdminUsersPage() {
     e.preventDefault();
     if (!editUserModal.user) return;
     
-    // Nếu họ đổi role của chính họ thì cũng nên cảnh báo, nhưng tạm thời cứ gọi API
     try {
       await userService.updateUser(editUserModal.user.id, {
         role: editUserModal.role,
-        isVip: editUserModal.isVip
+        vipType: editUserModal.vipType
       });
       toast.success('Cập nhật thông tin người dùng thành công');
-      setEditUserModal({ isOpen: false, user: null, role: 'MEMBER', isVip: false });
+      setEditUserModal({ isOpen: false, user: null, role: 'MEMBER', vipType: 'NONE' });
       fetchUsers();
     } catch (err) {
       toast.error('Lỗi khi cập nhật người dùng');
+    }
+  };
+
+  const handleAddCoins = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addCoinsModal.user || addCoinsModal.amount <= 0) return;
+    
+    try {
+      // NOTE: Assume we will add `addCoins` method to `userService`
+      // await userService.addCoins(addCoinsModal.user.id, addCoinsModal.amount, addCoinsModal.description);
+      // For now we use custom fetch or add to service
+      await import('../../services/api').then((mod) => {
+        return mod.default.post(`/admin/users/${addCoinsModal.user?.id}/coins?amount=${addCoinsModal.amount}&description=${encodeURIComponent(addCoinsModal.description)}`);
+      });
+      toast.success('Cấp xu thành công');
+      setAddCoinsModal({ isOpen: false, user: null, amount: 0, description: 'Admin cấp xu' });
+      fetchUsers();
+    } catch (err) {
+      toast.error('Lỗi khi cấp xu');
     }
   };
 
@@ -188,6 +193,7 @@ export default function AdminUsersPage() {
                 <th className="px-6 py-4">Username</th>
                 <th className="px-6 py-4">Email</th>
                 <th className="px-6 py-4">Quyền hạn</th>
+                <th className="px-6 py-4">Số dư Xu</th>
                 <th className="px-6 py-4 text-center">Trạng thái VIP</th>
                 <th className="px-6 py-4 text-right">Thao tác</th>
               </tr>
@@ -212,22 +218,30 @@ export default function AdminUsersPage() {
                       </span>
                     )}
                   </td>
+                  <td className="px-6 py-4 font-semibold text-yellow-400">
+                    {user.coins?.toLocaleString() || 0}
+                  </td>
                   <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() => openVipConfirm(user)}
-                      disabled={user.role === 'ADMIN'}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                        user.isVip
-                          ? 'bg-accent/20 text-accent hover:bg-accent/30'
-                          : 'bg-white/10 text-text-secondary hover:bg-white/20'
-                      } ${user.role === 'ADMIN' ? 'cursor-not-allowed opacity-50' : ''}`}
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                        user.vipType !== 'NONE'
+                          ? 'bg-accent/20 text-accent'
+                          : 'bg-white/10 text-text-secondary'
+                      }`}
                     >
                       <Crown className="h-3.5 w-3.5" />
-                      {user.isVip ? 'VIP' : 'Thường'}
-                    </button>
+                      {user.vipType}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-3">
+                      <button
+                        onClick={() => setAddCoinsModal({ isOpen: true, user, amount: 100, description: 'Admin cấp xu' })}
+                        className="inline-flex items-center justify-center rounded-lg p-2 text-yellow-400 transition-colors hover:bg-yellow-400/10"
+                        title="Cấp xu"
+                      >
+                        <Crown className="h-5 w-5" />
+                      </button>
                       <button
                         onClick={() => handleOpenEditUser(user)}
                         className="inline-flex items-center justify-center rounded-lg p-2 text-accent transition-colors hover:bg-accent/10"
@@ -328,8 +342,8 @@ export default function AdminUsersPage() {
                     <label className="mb-1.5 block text-sm font-medium text-text-secondary">Trạng thái VIP</label>
                     <Select
                       options={vipOptions}
-                      value={vipOptions.find(opt => opt.value === editUserModal.isVip)}
-                      onChange={(selected) => setEditUserModal(prev => ({ ...prev, isVip: selected ? selected.value : false }))}
+                      value={vipOptions.find(opt => opt.value === editUserModal.vipType)}
+                      onChange={(selected) => setEditUserModal(prev => ({ ...prev, vipType: selected ? selected.value : 'NONE' }))}
                       styles={selectStyles}
                       isClearable={false}
                       isSearchable={false}
@@ -344,6 +358,60 @@ export default function AdminUsersPage() {
               </button>
               <button type="submit" form="editUserForm" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary/25 hover:bg-primary-dark">
                 Lưu Thay Đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD COINS MODAL */}
+      {addCoinsModal.isOpen && addCoinsModal.user && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-surface shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-white/10 bg-surface-light px-6 py-4">
+              <h2 className="text-xl font-bold text-text-primary">Cấp Xu</h2>
+              <button onClick={() => setAddCoinsModal(prev => ({ ...prev, isOpen: false }))} className="text-text-secondary hover:text-white">✕</button>
+            </div>
+            <div className="p-6">
+              <form id="addCoinsForm" onSubmit={handleAddCoins} className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-text-secondary">Tài khoản</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={addCoinsModal.user.username}
+                    className="w-full rounded-xl border border-white/10 bg-surface-light/50 px-4 py-2 text-text-secondary outline-none cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-text-secondary">Số xu thêm</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={addCoinsModal.amount}
+                    onChange={(e) => setAddCoinsModal(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                    className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-text-secondary">Ghi chú</label>
+                  <input
+                    type="text"
+                    required
+                    value={addCoinsModal.description}
+                    onChange={(e) => setAddCoinsModal(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-accent"
+                  />
+                </div>
+              </form>
+            </div>
+            <div className="border-t border-white/10 bg-surface-light px-6 py-4 flex justify-end gap-3">
+              <button type="button" onClick={() => setAddCoinsModal(prev => ({ ...prev, isOpen: false }))} className="rounded-xl px-5 py-2.5 text-sm font-medium text-text-secondary hover:bg-white/5">
+                Hủy
+              </button>
+              <button type="submit" form="addCoinsForm" className="rounded-xl bg-yellow-500 px-5 py-2.5 text-sm font-medium text-black font-semibold shadow-lg shadow-yellow-500/25 hover:bg-yellow-400">
+                Xác nhận cấp
               </button>
             </div>
           </div>

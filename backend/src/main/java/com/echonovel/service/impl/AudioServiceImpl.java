@@ -13,6 +13,7 @@ import com.echonovel.mapper.AudioFileMapper;
 import com.echonovel.repository.AudioFileRepository;
 import com.echonovel.repository.ChapterRepository;
 import com.echonovel.repository.UserRepository;
+import com.echonovel.repository.UserPurchasedStoryRepository;
 import com.echonovel.service.AudioService;
 import com.echonovel.service.TtsService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,6 +41,7 @@ public class AudioServiceImpl implements AudioService {
     private final AudioFileRepository audioFileRepository;
     private final ChapterRepository chapterRepository;
     private final UserRepository userRepository;
+    private final UserPurchasedStoryRepository userPurchasedStoryRepository;
     private final TtsService ttsService;
     private final AudioFileMapper audioFileMapper;
 
@@ -181,8 +184,20 @@ public class AudioServiceImpl implements AudioService {
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
             if (chapter.getAccessLevel() == AccessLevel.VIP) {
-                if (!Boolean.TRUE.equals(user.getIsVip()) && user.getRole() != Role.ADMIN) {
-                    throw new AppException(ErrorCode.CHAPTER_ACCESS_DENIED);
+                if (user.getRole() == Role.ADMIN) {
+                    return chapter;
+                }
+                
+                boolean hasVip = user.getVipType() == com.echonovel.enums.VipType.PERMANENT || 
+                                (user.getVipType() == com.echonovel.enums.VipType.SUBSCRIPTION && 
+                                 user.getVipExpireAt() != null && 
+                                 user.getVipExpireAt().isAfter(LocalDateTime.now()));
+
+                if (!hasVip) {
+                    boolean hasPurchased = userPurchasedStoryRepository.existsByUserIdAndStoryId(user.getId(), chapter.getStory().getId());
+                    if (!hasPurchased) {
+                        throw new AppException(ErrorCode.CHAPTER_ACCESS_DENIED);
+                    }
                 }
             }
         }

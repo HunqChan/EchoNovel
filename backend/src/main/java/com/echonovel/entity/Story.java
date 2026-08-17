@@ -50,6 +50,10 @@ public class Story {
     @Builder.Default
     private StoryStatus status = StoryStatus.ONGOING;
 
+    @Column(name = "price_coins", nullable = false)
+    @Builder.Default
+    private Long priceCoins = 0L;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

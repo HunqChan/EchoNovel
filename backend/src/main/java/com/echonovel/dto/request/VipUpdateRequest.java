@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 public class VipUpdateRequest {
 
     @NotNull(message = "Trạng thái VIP không được để trống")
-    private Boolean isVip;
+    private com.echonovel.enums.VipType vipType;
 }

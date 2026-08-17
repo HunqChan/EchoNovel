@@ -17,5 +17,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
-    long countByIsVipTrue();
+    long countByVipTypeNot(com.echonovel.enums.VipType vipType);
 }

@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.MEMBER)
-                .isVip(false)
+                .vipType(com.echonovel.enums.VipType.NONE)
                 .build();
 
         user = userRepository.save(user);
@@ -90,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Generate token
         String token = jwtTokenProvider.generateToken(
-                user.getEmail(), user.getRole().name(), user.getIsVip()
+                user.getEmail(), user.getRole().name(), user.getVipType().name()
         );
 
         RefreshToken refreshToken = createRefreshToken(user);
@@ -114,7 +114,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Generate token
         String token = jwtTokenProvider.generateToken(
-                user.getEmail(), user.getRole().name(), user.getIsVip()
+                user.getEmail(), user.getRole().name(), user.getVipType().name()
         );
 
         RefreshToken refreshToken = createRefreshToken(user);
@@ -172,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
                         .username(name != null ? name : "user_" + UUID.randomUUID().toString().substring(0, 8))
                         .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Random password
                         .role(Role.MEMBER)
-                        .isVip(false)
+                        .vipType(com.echonovel.enums.VipType.NONE)
                         .provider("GOOGLE")
                         .providerId(subject)
                         .avatarUrl(pictureUrl)
@@ -191,7 +191,7 @@ public class AuthServiceImpl implements AuthService {
             }
 
             String token = jwtTokenProvider.generateToken(
-                    user.getEmail(), user.getRole().name(), user.getIsVip()
+                    user.getEmail(), user.getRole().name(), user.getVipType().name()
             );
 
             RefreshToken refreshToken = createRefreshToken(user);
@@ -220,7 +220,7 @@ public class AuthServiceImpl implements AuthService {
         
         // Generate new access token
         String token = jwtTokenProvider.generateToken(
-                user.getEmail(), user.getRole().name(), user.getIsVip()
+                user.getEmail(), user.getRole().name(), user.getVipType().name()
         );
 
         // Rotate refresh token

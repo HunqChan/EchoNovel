@@ -28,7 +28,7 @@ public class AdminStatsServiceImpl implements AdminStatsService {
         long totalStories = storyRepository.count();
         long totalChapters = chapterRepository.count();
         long totalUsers = userRepository.count();
-        long totalVipUsers = userRepository.countByIsVipTrue();
+        long totalVipUsers = userRepository.countByVipTypeNot(com.echonovel.enums.VipType.NONE);
 
         // Process Access Level Distribution
         List<Object[]> accessLevelCounts = chapterRepository.countChaptersByAccessLevel();

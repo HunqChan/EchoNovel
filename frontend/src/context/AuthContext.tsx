@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isVip: boolean;
+  updateUser: (user: UserResponse) => void;
   login: (token: string, refreshToken: string, user: UserResponse) => void;
   logout: () => Promise<void>;
 }
@@ -41,6 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(newUser));
   };
 
+  const updateUser = (newUser: UserResponse) => {
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+  };
+
   const logout = async () => {
     try {
       const storedRefreshToken = localStorage.getItem('refreshToken');
@@ -61,13 +67,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const isVipUser = () => {
+    if (!user) return false;
+    if (user.vipType === 'PERMANENT') return true;
+    if (user.vipType === 'SUBSCRIPTION' && user.vipExpireAt) {
+      return new Date(user.vipExpireAt) > new Date();
+    }
+    return false;
+  };
+
   const value: AuthContextType = {
     user,
     token,
     refreshToken,
     isAuthenticated: !!token,
     isAdmin: user?.role === 'ADMIN',
-    isVip: user?.isVip ?? false,
+    isVip: isVipUser(),
+    updateUser,
     login,
     logout,
   };

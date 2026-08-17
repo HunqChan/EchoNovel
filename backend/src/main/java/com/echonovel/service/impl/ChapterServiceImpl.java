@@ -13,6 +13,7 @@ import com.echonovel.mapper.ChapterMapper;
 import com.echonovel.repository.ChapterRepository;
 import com.echonovel.repository.StoryRepository;
 import com.echonovel.repository.UserRepository;
+import com.echonovel.repository.UserPurchasedStoryRepository;
 import com.echonovel.service.ChapterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,7 @@ public class ChapterServiceImpl implements ChapterService {
     private final ChapterRepository chapterRepository;
     private final StoryRepository storyRepository;
     private final UserRepository userRepository;
+    private final UserPurchasedStoryRepository userPurchasedStoryRepository;
     private final ChapterMapper chapterMapper;
 
     /**
@@ -68,8 +71,20 @@ public class ChapterServiceImpl implements ChapterService {
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
             if (chapter.getAccessLevel() == AccessLevel.VIP) {
-                if (!Boolean.TRUE.equals(user.getIsVip()) && user.getRole() != Role.ADMIN) {
-                    throw new AppException(ErrorCode.CHAPTER_ACCESS_DENIED);
+                if (user.getRole() == Role.ADMIN) {
+                    return chapterMapper.toResponse(chapter);
+                }
+                
+                boolean hasVip = user.getVipType() == com.echonovel.enums.VipType.PERMANENT || 
+                                (user.getVipType() == com.echonovel.enums.VipType.SUBSCRIPTION && 
+                                 user.getVipExpireAt() != null && 
+                                 user.getVipExpireAt().isAfter(LocalDateTime.now()));
+
+                if (!hasVip) {
+                    boolean hasPurchased = userPurchasedStoryRepository.existsByUserIdAndStoryId(user.getId(), chapter.getStory().getId());
+                    if (!hasPurchased) {
+                        throw new AppException(ErrorCode.CHAPTER_ACCESS_DENIED);
+                    }
                 }
             }
         }

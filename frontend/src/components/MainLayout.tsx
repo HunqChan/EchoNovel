@@ -71,7 +71,7 @@ export default function MainLayout() {
                     <UserCircle className="h-5 w-5 text-primary" />
                   )}
                   <span className="text-sm font-medium">{user?.username}</span>
-                  {user?.isVip && (
+                  {user?.vipType !== 'NONE' && (
                     <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
                       VIP
                     </span>
@@ -142,7 +142,7 @@ export default function MainLayout() {
                     <UserCircle className="h-5 w-5 text-primary" />
                   )}
                   <span className="text-sm font-medium">{user?.username}</span>
-                  {user?.isVip && (
+                  {user?.vipType !== 'NONE' && (
                     <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
                       VIP
                     </span>

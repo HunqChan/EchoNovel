@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,7 +19,9 @@ public class UserResponse {
     private String username;
     private String email;
     private String role;
-    private Boolean isVip;
+    private Long coins;
+    private String vipType;
+    private LocalDateTime vipExpireAt;
     private String provider;
     private String avatarUrl;
     private LocalDateTime createdAt;

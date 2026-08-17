@@ -4,6 +4,7 @@ import com.echonovel.dto.ApiResponse;
 import com.echonovel.dto.request.StoryRequest;
 import com.echonovel.dto.response.StoryResponse;
 import com.echonovel.service.StoryService;
+import com.echonovel.service.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class StoryController {
 
     private final StoryService storyService;
+    private final WalletService walletService;
 
     // ==================== PUBLIC APIs ====================
 
@@ -37,6 +40,12 @@ public class StoryController {
     public ResponseEntity<ApiResponse<StoryResponse>> getStoryById(@PathVariable Long id) {
         StoryResponse data = storyService.getStoryById(id);
         return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    @PostMapping("/api/stories/{id}/buy")
+    public ResponseEntity<ApiResponse<Void>> buyStory(Authentication authentication, @PathVariable Long id) {
+        walletService.buyStory(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Mua truyện thành công", null));
     }
 
     // ==================== ADMIN APIs ====================

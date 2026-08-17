@@ -31,10 +31,10 @@ public class JwtTokenProvider {
     /**
      * Generate JWT token with custom claims
      */
-    public String generateToken(String email, String role, Boolean isVip) {
+    public String generateToken(String email, String role, String vipType) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
-        claims.put("isVip", isVip);
+        claims.put("vipType", vipType);
 
         return Jwts.builder()
                 .claims(claims)
@@ -62,8 +62,8 @@ public class JwtTokenProvider {
     /**
      * Extract VIP status from token
      */
-    public Boolean extractIsVip(String token) {
-        return extractClaim(token, claims -> claims.get("isVip", Boolean.class));
+    public String extractVipType(String token) {
+        return extractClaim(token, claims -> claims.get("vipType", String.class));
     }
 
     /**

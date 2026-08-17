@@ -41,10 +41,10 @@ public class UserServiceImpl implements UserService {
         // Không cho phép hạ cấp chính mình nếu là admin (tuỳ chọn thêm)
         // Nhưng ở đây ta cứ cập nhật bình thường
         user.setRole(request.getRole());
-        user.setIsVip(request.getIsVip());
+        user.setVipType(request.getVipType());
         user = userRepository.save(user);
 
-        log.info("User {} updated (Role: {}, VIP: {})", user.getEmail(), user.getRole(), user.getIsVip());
+        log.info("User {} updated (Role: {}, VIP: {})", user.getEmail(), user.getRole(), user.getVipType());
         return userMapper.toResponse(user);
     }
 
@@ -57,10 +57,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        user.setIsVip(request.getIsVip());
+        user.setVipType(request.getVipType());
         user = userRepository.save(user);
 
-        log.info("User {} VIP status updated to {}", user.getEmail(), user.getIsVip());
+        log.info("User {} VIP status updated to {}", user.getEmail(), user.getVipType());
         return userMapper.toResponse(user);
     }
 

@@ -76,7 +76,9 @@ export interface UserResponse {
   username: string;
   email: string;
   role: 'ADMIN' | 'MEMBER';
-  isVip: boolean;
+  vipType: 'NONE' | 'PERMANENT' | 'SUBSCRIPTION';
+  coins: number;
+  vipExpireAt: string | null;
   avatarUrl?: string;
   provider?: string;
   createdAt: string;
@@ -126,6 +128,7 @@ export interface StoryResponse {
   coverImage: string | null;
   description: string | null;
   status: 'ONGOING' | 'COMPLETED';
+  priceCoins: number;
   chapters?: ChapterResponse[];
   createdAt: string;
   updatedAt: string;
@@ -138,6 +141,7 @@ export interface StoryRequest {
   coverImage?: string;
   description?: string;
   status?: string;
+  priceCoins?: number;
 }
 
 // ========== Chapter Types ==========
@@ -189,4 +193,23 @@ export interface AdminStatsResponse {
   totalVipUsers: number;
   accessLevelDistribution: Record<string, number>;
   topStories: TopStoryStat[];
+}
+
+// ========== Wallet & VIP Types ==========
+
+export interface VipPackage {
+  id: number;
+  name: string;
+  durationDays: number;
+  priceCoins: number;
+  description: string;
+  isActive: boolean;
+}
+
+export interface CoinTransaction {
+  id: number;
+  amount: number;
+  type: 'ADMIN_ADJUST' | 'BUY_VIP' | 'BUY_STORY';
+  description: string;
+  createdAt: string;
 }

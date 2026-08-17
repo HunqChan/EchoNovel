@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { storyService } from '../services/storyService';
 import type { StoryResponse, ChapterResponse } from '../types';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+import toast from 'react-hot-toast';
 import {
   BookOpen,
   Clock,
@@ -19,6 +22,8 @@ export default function StoryDetailPage() {
   const [story, setStory] = useState<StoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [buying, setBuying] = useState(false);
+  const { user, isAuthenticated, isVip, updateUser } = useAuth();
 
   useEffect(() => {
     if (!id) return;
@@ -49,6 +54,28 @@ export default function StoryDetailPage() {
       </div>
     );
   }
+
+  const handleBuyStory = async () => {
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập để mua truyện!');
+      return;
+    }
+    if (user!.coins < story.priceCoins) {
+      toast.error('Bạn không đủ xu để mua truyện này!');
+      return;
+    }
+    try {
+      setBuying(true);
+      await api.post(`/wallet/buy-story/${story.id}`);
+      toast.success('Mua truyện thành công! Bạn đã có thể đọc các chương VIP.');
+      // Trừ xu trên client
+      updateUser({ ...user!, coins: user!.coins - story.priceCoins });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi mua truyện');
+    } finally {
+      setBuying(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -126,6 +153,23 @@ export default function StoryDetailPage() {
                 <p className="text-xs text-text-secondary">Chương</p>
               </div>
             </div>
+
+            {/* Buy Action */}
+            {story.priceCoins > 0 && !isVip && (
+              <div className="mt-6 flex items-center gap-4 border-t border-white/10 pt-6">
+                <button
+                  onClick={handleBuyStory}
+                  disabled={buying}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 font-semibold text-white transition-all hover:bg-accent-dark focus:ring-2 focus:ring-accent/50 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed sm:flex-none"
+                >
+                  {buying ? <Loader2 className="h-5 w-5 animate-spin" /> : <Crown className="h-5 w-5" />}
+                  Mua trọn bộ cuốn này ({story.priceCoins} xu)
+                </button>
+                <p className="text-sm text-text-secondary hidden sm:block">
+                  Mở khóa vĩnh viễn toàn bộ chương VIP
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

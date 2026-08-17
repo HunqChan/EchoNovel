@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/userService';
 import { toast } from 'react-hot-toast';
-import { User, Shield, Image as ImageIcon, Save, LogOut, Key } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { User, Shield, Image as ImageIcon, Save, LogOut, Key, Wallet, Crown, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import api from '../services/api';
+import type { CoinTransaction } from '../types';
 
 const ProfilePage: React.FC = () => {
   const { user, token, refreshToken, logout, login } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'info' | 'security'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'security' | 'wallet'>('info');
 
   // Info Tab State
   const [username, setUsername] = useState(user?.username || '');
@@ -24,6 +26,10 @@ const ProfilePage: React.FC = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
+  // Wallet Tab State
+  const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
+  const [loadingTx, setLoadingTx] = useState(false);
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -34,7 +40,7 @@ const ProfilePage: React.FC = () => {
     const fetchLatestProfile = async () => {
       try {
         if (token) {
-          const res = await userService.getProfile();
+          const res: any = await userService.getProfile();
           // Update the context and localStorage with the fresh user data
           login(token, refreshToken || '', res.data);
           setUsername(res.data.username);
@@ -47,6 +53,16 @@ const ProfilePage: React.FC = () => {
     
     fetchLatestProfile();
   }, [navigate]); // Intentionally not including user/token to avoid infinite loops
+
+  useEffect(() => {
+    if (activeTab === 'wallet' && token) {
+      setLoadingTx(true);
+      api.get('/wallet/transactions')
+        .then((res: any) => setTransactions(res.data.data))
+        .catch((err: any) => console.error(err))
+        .finally(() => setLoadingTx(false));
+    }
+  }, [activeTab, token]);
 
   const handleUpdateInfo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,9 +137,9 @@ const ProfilePage: React.FC = () => {
                 alt={user.username}
                 className="w-full h-full rounded-full object-cover border-4 border-gray-800 shadow-md"
               />
-              {user.isVip && (
+              {user.vipType !== 'NONE' && (
                 <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-md shadow-lg border border-yellow-400">
-                  VIP
+                  {user.vipType === 'PERMANENT' ? 'VIP Vĩnh Viễn' : 'VIP'}
                 </div>
               )}
             </div>
@@ -145,6 +161,14 @@ const ProfilePage: React.FC = () => {
               >
                 <Shield className="w-5 h-5" />
                 Bảo mật
+              </button>
+
+              <button
+                onClick={() => setActiveTab('wallet')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'wallet' ? 'bg-primary/20 text-primary font-medium' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <Wallet className="w-5 h-5" />
+                Ví & VIP
               </button>
 
               <button
@@ -306,6 +330,79 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </form>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'wallet' && (
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-6">Ví & Gói VIP</h3>
+
+                {/* Balance & VIP Card */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Crown className="w-32 h-32 text-yellow-500" />
+                  </div>
+                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-gray-400 text-sm font-medium mb-1">Số dư Xu</p>
+                      <div className="flex items-end gap-2">
+                        <span className="text-4xl font-bold text-yellow-500">{user.coins?.toLocaleString() || 0}</span>
+                        <span className="text-gray-400 pb-1">xu</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm font-medium mb-1">Trạng thái VIP</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold ${user.vipType !== 'NONE' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-gray-800 text-gray-400'}`}>
+                          <Crown className="w-4 h-4" />
+                          {user.vipType === 'PERMANENT' ? 'VIP Vĩnh Viễn' : user.vipType === 'SUBSCRIPTION' ? 'VIP Có Thời Hạn' : 'Thành Viên Thường'}
+                        </span>
+                      </div>
+                      {user.vipType === 'SUBSCRIPTION' && user.vipExpireAt && (
+                        <p className="text-sm text-gray-400 mt-2 flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
+                          Hết hạn: <span className="text-white font-medium">{new Date(user.vipExpireAt).toLocaleDateString('vi-VN')}</span>
+                        </p>
+                      )}
+                      {user.vipType !== 'PERMANENT' && (
+                        <Link to="/upgrade" className="inline-block mt-3 text-sm text-primary hover:text-primary-light transition-colors">
+                          Nâng cấp VIP ngay →
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transaction History */}
+                <div>
+                  <h4 className="text-lg font-bold text-white mb-4">Lịch sử giao dịch</h4>
+                  {loadingTx ? (
+                    <div className="text-center py-8 text-gray-500">Đang tải...</div>
+                  ) : transactions.length === 0 ? (
+                    <div className="text-center py-12 bg-gray-900/50 rounded-xl border border-gray-800 text-gray-500">
+                      Chưa có giao dịch nào
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {transactions.map(tx => (
+                        <div key={tx.id} className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${tx.amount > 0 ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                              {tx.amount > 0 ? <ArrowDownRight className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{tx.description}</p>
+                              <p className="text-xs text-gray-500 mt-1">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
+                            </div>
+                          </div>
+                          <div className={`text-lg font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-white'}`}>
+                            {tx.amount > 0 ? '+' : ''}{tx.amount}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
