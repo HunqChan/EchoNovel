@@ -42,6 +42,11 @@ public class UserServiceImpl implements UserService {
         // Nhưng ở đây ta cứ cập nhật bình thường
         user.setRole(request.getRole());
         user.setVipType(request.getVipType());
+        if (request.getVipType() == com.echonovel.enums.VipType.SUBSCRIPTION) {
+            user.setVipExpireAt(request.getVipExpireAt());
+        } else {
+            user.setVipExpireAt(null);
+        }
         user = userRepository.save(user);
 
         log.info("User {} updated (Role: {}, VIP: {})", user.getEmail(), user.getRole(), user.getVipType());

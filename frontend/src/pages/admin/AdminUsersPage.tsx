@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Crown, ShieldAlert, Edit2, Trash2 } from 'lucide-react';
+import { Loader2, Crown, ShieldAlert, Edit2, Trash2, Coins } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
 import { userService } from '../../services/userService';
@@ -54,9 +54,9 @@ const roleOptions = [
 ];
 
 const vipOptions = [
-  { value: 'NONE', label: 'Thường (NONE)' },
-  { value: 'SUBSCRIPTION', label: 'Có thời hạn (SUBSCRIPTION)' },
-  { value: 'PERMANENT', label: 'Vĩnh viễn (PERMANENT)' }
+  { value: 'NONE', label: 'Thường' },
+  { value: 'SUBSCRIPTION', label: 'Có thời hạn' },
+  { value: 'PERMANENT', label: 'Vĩnh viễn' }
 ];
 
 export default function AdminUsersPage() {
@@ -76,7 +76,8 @@ export default function AdminUsersPage() {
     user: UserResponse | null;
     role: string;
     vipType: string;
-  }>({ isOpen: false, user: null, role: 'MEMBER', vipType: 'NONE' });
+    vipExpireAt: string;
+  }>({ isOpen: false, user: null, role: 'MEMBER', vipType: 'NONE', vipExpireAt: '' });
 
   const [addCoinsModal, setAddCoinsModal] = useState<{
     isOpen: boolean;
@@ -130,7 +131,8 @@ export default function AdminUsersPage() {
       isOpen: true,
       user,
       role: user.role,
-      vipType: user.vipType || 'NONE'
+      vipType: user.vipType || 'NONE',
+      vipExpireAt: user.vipExpireAt ? user.vipExpireAt.substring(0, 16) : ''
     });
   };
 
@@ -141,10 +143,11 @@ export default function AdminUsersPage() {
     try {
       await userService.updateUser(editUserModal.user.id, {
         role: editUserModal.role,
-        vipType: editUserModal.vipType
+        vipType: editUserModal.vipType,
+        vipExpireAt: (editUserModal.vipType === 'SUBSCRIPTION' && editUserModal.vipExpireAt) ? new Date(editUserModal.vipExpireAt).toISOString() : undefined
       });
       toast.success('Cập nhật thông tin người dùng thành công');
-      setEditUserModal({ isOpen: false, user: null, role: 'MEMBER', vipType: 'NONE' });
+      setEditUserModal({ isOpen: false, user: null, role: 'MEMBER', vipType: 'NONE', vipExpireAt: '' });
       fetchUsers();
     } catch (err) {
       toast.error('Lỗi khi cập nhật người dùng');
@@ -224,13 +227,13 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4 text-center">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
-                        user.vipType !== 'NONE'
+                        (user.vipType === 'PERMANENT' || (user.vipType === 'SUBSCRIPTION' && user.vipExpireAt && new Date(user.vipExpireAt) > new Date()))
                           ? 'bg-accent/20 text-accent'
                           : 'bg-white/10 text-text-secondary'
                       }`}
                     >
                       <Crown className="h-3.5 w-3.5" />
-                      {user.vipType}
+                      {user.vipType === 'SUBSCRIPTION' && (!user.vipExpireAt || new Date(user.vipExpireAt) <= new Date()) ? 'Hết hạn VIP' : user.vipType}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -240,7 +243,7 @@ export default function AdminUsersPage() {
                         className="inline-flex items-center justify-center rounded-lg p-2 text-yellow-400 transition-colors hover:bg-yellow-400/10"
                         title="Cấp xu"
                       >
-                        <Crown className="h-5 w-5" />
+                        <Coins className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleOpenEditUser(user)}
@@ -300,12 +303,12 @@ export default function AdminUsersPage() {
       {/* EDIT USER MODAL */}
       {editUserModal.isOpen && editUserModal.user && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-surface shadow-2xl overflow-hidden">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-surface shadow-2xl overflow-visible">
             <div className="flex items-center justify-between border-b border-white/10 bg-surface-light px-6 py-4">
               <h2 className="text-xl font-bold text-text-primary">Sửa thông tin người dùng</h2>
               <button onClick={() => setEditUserModal(prev => ({ ...prev, isOpen: false }))} className="text-text-secondary hover:text-white">✕</button>
             </div>
-            <div className="p-6 overflow-y-auto">
+            <div className="p-6 overflow-visible">
               <form id="editUserForm" onSubmit={handleUpdateUser} className="space-y-5">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text-secondary">Tên đăng nhập</label>
@@ -347,12 +350,25 @@ export default function AdminUsersPage() {
                       styles={selectStyles}
                       isClearable={false}
                       isSearchable={false}
+                      menuPosition="fixed"
                     />
                   </div>
                 </div>
+                {editUserModal.vipType === 'SUBSCRIPTION' && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-text-secondary">Thời hạn VIP</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={editUserModal.vipExpireAt}
+                      onChange={(e) => setEditUserModal(prev => ({ ...prev, vipExpireAt: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-accent"
+                    />
+                  </div>
+                )}
               </form>
             </div>
-            <div className="border-t border-white/10 bg-surface-light px-6 py-4 flex justify-end gap-3">
+            <div className="border-t border-white/10 bg-surface-light px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
               <button type="button" onClick={() => setEditUserModal(prev => ({ ...prev, isOpen: false }))} className="rounded-xl px-5 py-2.5 text-sm font-medium text-text-secondary hover:bg-white/5">
                 Hủy
               </button>

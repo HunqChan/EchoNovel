@@ -16,4 +16,6 @@ public class UserUpdateRequest {
 
     @NotNull(message = "Trạng thái VIP không được để trống")
     private com.echonovel.enums.VipType vipType;
+
+    private java.time.LocalDateTime vipExpireAt;
 }

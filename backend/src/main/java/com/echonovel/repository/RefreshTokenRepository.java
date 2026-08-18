@@ -13,6 +13,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     
     Optional<RefreshToken> findByToken(String token);
     
+    Optional<RefreshToken> findByUser(User user);
+    
     @Modifying
     int deleteByUser(User user);
 }
