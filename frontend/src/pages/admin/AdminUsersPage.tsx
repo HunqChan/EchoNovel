@@ -144,7 +144,7 @@ export default function AdminUsersPage() {
       await userService.updateUser(editUserModal.user.id, {
         role: editUserModal.role,
         vipType: editUserModal.vipType,
-        vipExpireAt: (editUserModal.vipType === 'SUBSCRIPTION' && editUserModal.vipExpireAt) ? new Date(editUserModal.vipExpireAt).toISOString() : undefined
+        vipExpireAt: (editUserModal.vipType === 'SUBSCRIPTION' && editUserModal.vipExpireAt) ? editUserModal.vipExpireAt : undefined
       });
       toast.success('Cập nhật thông tin người dùng thành công');
       setEditUserModal({ isOpen: false, user: null, role: 'MEMBER', vipType: 'NONE', vipExpireAt: '' });

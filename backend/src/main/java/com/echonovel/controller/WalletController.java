@@ -32,7 +32,11 @@ public class WalletController {
         return ResponseEntity.ok(ApiResponse.success("Mua gói VIP thành công", null));
     }
 
-
+    @PostMapping("/buy-story/{storyId}")
+    public ResponseEntity<ApiResponse<Void>> buyStory(Authentication authentication, @PathVariable Long storyId) {
+        walletService.buyStory(authentication.getName(), storyId);
+        return ResponseEntity.ok(ApiResponse.success("Mua truyện thành công", null));
+    }
 
     @GetMapping("/transactions")
     public ResponseEntity<ApiResponse<List<CoinTransaction>>> getTransactions(Authentication authentication) {

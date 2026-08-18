@@ -22,6 +22,8 @@ public class StoryResponse {
     private String coverImage;
     private String description;
     private String status;
+    private Long priceCoins;
+    private Boolean isPurchased;
     private java.util.List<ChapterResponse> chapters;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

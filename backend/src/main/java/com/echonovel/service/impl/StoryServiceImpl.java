@@ -14,6 +14,8 @@ import com.echonovel.repository.AuthorRepository;
 import com.echonovel.repository.ChapterRepository;
 import com.echonovel.repository.GenreRepository;
 import com.echonovel.repository.StoryRepository;
+import com.echonovel.repository.UserRepository;
+import com.echonovel.repository.UserPurchasedStoryRepository;
 import com.echonovel.service.StoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -37,6 +41,8 @@ public class StoryServiceImpl implements StoryService {
     private final AuthorRepository authorRepository;
     private final GenreRepository genreRepository;
     private final ChapterRepository chapterRepository;
+    private final UserRepository userRepository;
+    private final UserPurchasedStoryRepository userPurchasedStoryRepository;
     private final StoryMapper storyMapper;
     private final ChapterMapper chapterMapper;
 
@@ -64,6 +70,18 @@ public class StoryServiceImpl implements StoryService {
                 .stream()
                 .map(chapterMapper::toSummary)
                 .collect(Collectors.toList()));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
+            String email = auth.getName();
+            userRepository.findByEmail(email).ifPresent(user -> {
+                boolean purchased = userPurchasedStoryRepository.existsByUserIdAndStoryId(user.getId(), id);
+                response.setIsPurchased(purchased);
+            });
+        } else {
+            response.setIsPurchased(false);
+        }
+
         return response;
     }
 
@@ -100,6 +118,9 @@ public class StoryServiceImpl implements StoryService {
         story.setAuthor(author);
         story.setCoverImage(request.getCoverImage());
         story.setDescription(request.getDescription());
+        if (request.getPriceCoins() != null) {
+            story.setPriceCoins(request.getPriceCoins());
+        }
 
         if (request.getStatus() != null) {
             story.setStatus(StoryStatus.valueOf(request.getStatus()));

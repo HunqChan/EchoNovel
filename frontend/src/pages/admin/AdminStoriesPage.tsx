@@ -86,7 +86,8 @@ export default function AdminStoriesPage() {
     genreIds: [],
     coverImage: '',
     description: '',
-    status: 'ONGOING'
+    status: 'ONGOING',
+    priceCoins: 0
   });
 
   // --- Chapter Form State ---
@@ -194,6 +195,7 @@ export default function AdminStoriesPage() {
         coverImage: story.coverImage || '',
         description: story.description || '',
         status: story.status,
+        priceCoins: story.priceCoins || 0,
       });
     } else {
       setEditingStory(null);
@@ -203,7 +205,8 @@ export default function AdminStoriesPage() {
         genreIds: [],
         coverImage: '',
         description: '',
-        status: 'ONGOING'
+        status: 'ONGOING',
+        priceCoins: 0
       });
     }
     setShowStoryModal(true);
@@ -692,15 +695,28 @@ export default function AdminStoriesPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-text-secondary">Link Ảnh bìa (URL)</label>
-                  <input
-                    type="url"
-                    value={storyFormData.coverImage}
-                    onChange={(e) => setStoryFormData({ ...storyFormData, coverImage: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-primary/50"
-                    placeholder="https://example.com/image.jpg"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-text-secondary">Giá mua lẻ (Xu)</label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={storyFormData.priceCoins}
+                      onChange={(e) => setStoryFormData({ ...storyFormData, priceCoins: Number(e.target.value) })}
+                      className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-text-secondary">Link Ảnh bìa (URL)</label>
+                    <input
+                      type="url"
+                      value={storyFormData.coverImage}
+                      onChange={(e) => setStoryFormData({ ...storyFormData, coverImage: e.target.value })}
+                      className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-primary/50"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
                 </div>
 
                 <div>

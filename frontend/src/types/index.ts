@@ -129,6 +129,7 @@ export interface StoryResponse {
   description: string | null;
   status: 'ONGOING' | 'COMPLETED';
   priceCoins: number;
+  isPurchased?: boolean;
   chapters?: ChapterResponse[];
   createdAt: string;
   updatedAt: string;

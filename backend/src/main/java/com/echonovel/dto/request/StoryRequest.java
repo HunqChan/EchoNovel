@@ -28,4 +28,6 @@ public class StoryRequest {
     private String description;
 
     private String status; // ONGOING, COMPLETED
+
+    private Long priceCoins;
 }

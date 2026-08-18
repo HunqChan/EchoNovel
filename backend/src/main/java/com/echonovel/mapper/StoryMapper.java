@@ -31,6 +31,7 @@ public class StoryMapper {
                 .status(request.getStatus() != null
                         ? StoryStatus.valueOf(request.getStatus())
                         : StoryStatus.ONGOING)
+                .priceCoins(request.getPriceCoins() != null ? request.getPriceCoins() : 0L)
                 .build();
     }
 
@@ -49,6 +50,7 @@ public class StoryMapper {
                 .coverImage(story.getCoverImage())
                 .description(story.getDescription())
                 .status(story.getStatus().name())
+                .priceCoins(story.getPriceCoins())
                 .createdAt(story.getCreatedAt())
                 .updatedAt(story.getUpdatedAt())
                 .build();

@@ -289,14 +289,22 @@ export default function ChapterReadPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       {/* Header */}
-      <div className="mb-6 text-center">
+      <div className="relative mb-6 text-center pt-8 sm:pt-0">
         <Link
           to={`/stories/${chapter.storyId}`}
-          className="text-sm text-text-secondary transition-colors hover:text-primary"
+          className="absolute left-0 top-0 flex items-center gap-2 rounded-xl border border-white/10 bg-surface-light px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-primary/50 hover:text-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Quay lại</span>
+        </Link>
+
+        <Link
+          to={`/stories/${chapter.storyId}`}
+          className="inline-block text-sm text-text-secondary transition-colors hover:text-primary mt-2 sm:mt-0"
         >
           {chapter.storyTitle?.normalize('NFC')}
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-text-primary sm:text-2xl">
+        <h1 className="mt-2 text-xl font-bold text-text-primary sm:text-2xl px-4 sm:px-24">
           Chương {chapter.chapterNumber}: {chapter.title?.normalize('NFC')}
         </h1>
       </div>
@@ -332,15 +340,6 @@ export default function ChapterReadPage() {
       {/* Bottom navigation */}
       <ChapterNav />
 
-      {/* Back to story link */}
-      <div className="mt-8 text-center">
-        <Link
-          to={`/stories/${chapter.storyId}`}
-          className="text-sm text-text-secondary transition-colors hover:text-primary"
-        >
-          ← Quay lại {chapter.storyTitle}
-        </Link>
-      </div>
     </div>
   );
 }

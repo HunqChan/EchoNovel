@@ -11,7 +11,7 @@ export default function UpgradeVipPage() {
   const [loading, setLoading] = useState(true);
   const [buyingId, setBuyingId] = useState<number | null>(null);
   
-  const { user, isAuthenticated, updateUser } = useAuth();
+  const { user, isAuthenticated, isVip, updateUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,9 +82,17 @@ export default function UpgradeVipPage() {
 
       {isAuthenticated && (
         <div className="bg-surface border border-gray-800 rounded-2xl p-6 mb-12 flex justify-between items-center max-w-lg mx-auto">
-          <div>
-            <p className="text-sm text-gray-400">Số dư hiện tại</p>
-            <p className="text-2xl font-bold text-yellow-500">{user?.coins?.toLocaleString() || 0} <span className="text-base text-gray-400 font-normal">xu</span></p>
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-sm text-gray-400">Số dư hiện tại</p>
+              <p className="text-2xl font-bold text-yellow-500">{user?.coins?.toLocaleString() || 0} <span className="text-base text-gray-400 font-normal">xu</span></p>
+            </div>
+            <button
+              onClick={() => toast('Tính năng thanh toán đang được phát triển!')}
+              className="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl transition-all hover:scale-105 shadow-lg shadow-primary/25"
+            >
+              Nạp xu
+            </button>
           </div>
           {user?.vipType === 'PERMANENT' ? (
             <div className="px-4 py-2 bg-yellow-500/20 text-yellow-500 rounded-lg font-semibold">VIP Vĩnh Viễn</div>
@@ -124,14 +132,21 @@ export default function UpgradeVipPage() {
               </li>
             </ul>
 
-            <button
-              onClick={() => handleBuy(pkg)}
-              disabled={buyingId !== null || user?.vipType === 'PERMANENT'}
-              className="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {buyingId === pkg.id && <Loader2 className="w-5 h-5 animate-spin" />}
-              {user?.vipType === 'PERMANENT' ? 'Đã là VIP' : 'Mua ngay'}
-            </button>
+            {!isVip && (
+              <button
+                onClick={() => handleBuy(pkg)}
+                disabled={buyingId !== null}
+                className="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {buyingId === pkg.id && <Loader2 className="w-5 h-5 animate-spin" />}
+                Mua ngay
+              </button>
+            )}
+            {isVip && (
+              <div className="w-full py-3 px-4 bg-white/5 text-gray-400 font-bold rounded-xl text-center border border-white/10">
+                Bạn đang là VIP
+              </div>
+            )}
           </div>
         ))}
       </div>

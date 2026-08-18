@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Headphones, Trophy, Grid, Bell, Star, BookOpen } from 'lucide-react';
+import { Headphones, Trophy, Grid, BookOpen, Crown, Wallet } from 'lucide-react';
 import { storyService } from '../services/storyService';
 import type { StoryResponse } from '../types';
 import HeroSlider from '../components/HeroSlider';
@@ -41,11 +41,11 @@ export default function HomePage() {
   }
 
   const quickActions = [
+    { icon: Crown, label: 'Nâng cấp VIP', color: 'bg-yellow-500/10 text-yellow-500', path: '/upgrade' },
+    { icon: Wallet, label: 'Nạp xu', color: 'bg-green-500/10 text-green-500', path: '/profile?tab=wallet' },
     { icon: Headphones, label: 'Truyện đã nghe', color: 'bg-pink-500/10 text-pink-500', path: '/library' },
     { icon: Trophy, label: 'BXH Vinh Danh', color: 'bg-purple-500/10 text-purple-500', path: '/stories' },
     { icon: Grid, label: 'Thể loại', color: 'bg-blue-500/10 text-blue-500', path: '/stories' },
-    { icon: Bell, label: 'Thông báo', color: 'bg-green-500/10 text-green-500', path: '/' },
-    { icon: Star, label: 'Hoạt động', color: 'bg-yellow-500/10 text-yellow-500', path: '/' },
   ];
 
   return (

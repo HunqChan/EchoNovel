@@ -3,15 +3,21 @@ import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/userService';
 import { toast } from 'react-hot-toast';
 import { User, Shield, Image as ImageIcon, Save, LogOut, Key, Wallet, Crown, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import type { CoinTransaction } from '../types';
 
 const ProfilePage: React.FC = () => {
-  const { user, token, refreshToken, logout, login } = useAuth();
+  const { user, token, refreshToken, logout, login, isVip } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'info' | 'security' | 'wallet'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'security' | 'wallet'>(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
+    if (tab === 'wallet' || tab === 'security' || tab === 'info') return tab;
+    return 'info';
+  });
 
   // Info Tab State
   const [username, setUsername] = useState(user?.username || '');
@@ -137,7 +143,7 @@ const ProfilePage: React.FC = () => {
                 alt={user.username}
                 className="w-full h-full rounded-full object-cover border-4 border-gray-800 shadow-md"
               />
-              {user.vipType !== 'NONE' && (
+              {isVip && (
                 <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-md shadow-lg border border-yellow-400">
                   {user.vipType === 'PERMANENT' ? 'VIP Vĩnh Viễn' : 'VIP'}
                 </div>
@@ -345,26 +351,32 @@ const ProfilePage: React.FC = () => {
                   <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <p className="text-gray-400 text-sm font-medium mb-1">Số dư Xu</p>
-                      <div className="flex items-end gap-2">
+                      <div className="flex items-end gap-2 mt-2">
                         <span className="text-4xl font-bold text-yellow-500">{user.coins?.toLocaleString() || 0}</span>
                         <span className="text-gray-400 pb-1">xu</span>
                       </div>
+                      <button
+                        onClick={() => toast('Tính năng thanh toán đang được phát triển!')}
+                        className="mt-3 px-4 py-1.5 bg-gradient-to-r from-primary to-secondary text-white text-sm font-semibold rounded-lg transition-all hover:scale-105 shadow-md shadow-primary/25"
+                      >
+                        Nạp xu
+                      </button>
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm font-medium mb-1">Trạng thái VIP</p>
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold ${user.vipType !== 'NONE' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-gray-800 text-gray-400'}`}>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold ${isVip ? 'bg-yellow-500/20 text-yellow-500' : 'bg-gray-800 text-gray-400'}`}>
                           <Crown className="w-4 h-4" />
-                          {user.vipType === 'PERMANENT' ? 'VIP Vĩnh Viễn' : user.vipType === 'SUBSCRIPTION' ? 'VIP Có Thời Hạn' : 'Thành Viên Thường'}
+                          {isVip ? (user.vipType === 'PERMANENT' ? 'VIP Vĩnh Viễn' : 'VIP Có Thời Hạn') : 'Thành Viên Thường'}
                         </span>
                       </div>
                       {user.vipType === 'SUBSCRIPTION' && user.vipExpireAt && (
-                        <p className="text-sm text-gray-400 mt-2 flex items-center gap-1.5">
+                        <p className={`text-sm mt-2 flex items-center gap-1.5 ${isVip ? 'text-gray-400' : 'text-red-400'}`}>
                           <Clock className="w-4 h-4" />
-                          Hết hạn: <span className="text-white font-medium">{new Date(user.vipExpireAt).toLocaleDateString('vi-VN')}</span>
+                          {isVip ? 'Hết hạn:' : 'Đã hết hạn lúc:'} <span className="font-medium text-white">{new Date(user.vipExpireAt).toLocaleString('vi-VN')}</span>
                         </p>
                       )}
-                      {user.vipType !== 'PERMANENT' && (
+                      {!isVip && (
                         <Link to="/upgrade" className="inline-block mt-3 text-sm text-primary hover:text-primary-light transition-colors">
                           Nâng cấp VIP ngay →
                         </Link>

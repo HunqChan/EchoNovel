@@ -44,3 +44,10 @@ desktop.ini
 # Uploads (audio files)
 # ========================
 uploads/
+
+# ========================
+# Agent Rules
+# ========================
+AGENTS.md
+GEMINI.md
+.agents/

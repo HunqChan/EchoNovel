@@ -79,6 +79,13 @@ export default function StoryDetailPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Back link */}
+      <div className="mb-6">
+        <Link to="/stories" className="text-sm text-text-secondary transition-colors hover:text-primary">
+          ← Quay lại danh sách truyện
+        </Link>
+      </div>
+
       {/* ───── Story Info ───── */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-surface-light">
         <div className="flex flex-col md:flex-row">
@@ -155,7 +162,7 @@ export default function StoryDetailPage() {
             </div>
 
             {/* Buy Action */}
-            {story.priceCoins > 0 && !isVip && (
+            {story.priceCoins > 0 && !isVip && !story.isPurchased && (
               <div className="mt-6 flex items-center gap-4 border-t border-white/10 pt-6">
                 <button
                   onClick={handleBuyStory}
@@ -201,13 +208,13 @@ export default function StoryDetailPage() {
 
                 {/* Access level indicator */}
                 <div className="ml-3 shrink-0">
-                  {chapter.accessLevel === 'VIP' && (
+                  {chapter.accessLevel === 'VIP' && (!isVip && !story.isPurchased) && (
                     <span className="flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">
                       <Crown className="h-3.5 w-3.5" />
                       VIP
                     </span>
                   )}
-                  {chapter.accessLevel === 'MEMBER' && (
+                  {chapter.accessLevel === 'MEMBER' && (!isAuthenticated) && (
                     <span className="flex items-center gap-1 rounded-full bg-blue-500/15 px-2.5 py-1 text-xs font-semibold text-blue-400">
                       <Lock className="h-3.5 w-3.5" />
                       Đăng nhập
@@ -220,12 +227,6 @@ export default function StoryDetailPage() {
         )}
       </div>
 
-      {/* Back link */}
-      <div className="mt-8">
-        <Link to="/stories" className="text-sm text-text-secondary transition-colors hover:text-primary">
-          ← Quay lại danh sách truyện
-        </Link>
-      </div>
     </div>
   );
 }
