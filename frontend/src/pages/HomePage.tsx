@@ -1,28 +1,35 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Headphones, Trophy, Grid, BookOpen, Crown, Wallet } from 'lucide-react';
+import { Headphones, Trophy, Grid, BookOpen, Crown, Wallet, Flame, History } from 'lucide-react';
 import { storyService } from '../services/storyService';
-import type { StoryResponse } from '../types';
+import { interactionService } from '../services/interactionService';
+import { useAuth } from '../context/AuthContext';
+import type { StoryResponse, ReadingHistoryResponse, TrendingStoryResponse } from '../types';
 import HeroSlider from '../components/HeroSlider';
 
 export default function HomePage() {
+  const { isAuthenticated } = useAuth();
   const [featuredStories, setFeaturedStories] = useState<StoryResponse[]>([]);
   const [recentStories, setRecentStories] = useState<StoryResponse[]>([]);
   const [topStories, setTopStories] = useState<StoryResponse[]>([]);
+  const [readingHistory, setReadingHistory] = useState<ReadingHistoryResponse[]>([]);
+  const [trendingStories, setTrendingStories] = useState<TrendingStoryResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [recentRes, topRes] = await Promise.all([
+        const [recentRes, topRes, trendingRes] = await Promise.all([
           storyService.getStories({ size: 15, sort: 'createdAt,desc' }),
-          storyService.getStories({ size: 5, sort: 'id,asc' }) // Mượn tạm id asc làm top
+          storyService.getStories({ size: 5, sort: 'id,asc' }),
+          interactionService.getTrendingStories(),
         ]);
         
         const allRecent = recentRes.data.content;
         setFeaturedStories(allRecent.slice(0, 5));
         setRecentStories(allRecent.slice(5));
         setTopStories(topRes.data.content);
+        setTrendingStories(trendingRes.data);
       } catch (err) {
         console.error('Error fetching homepage data', err);
       } finally {
@@ -31,6 +38,14 @@ export default function HomePage() {
     };
     fetchData();
   }, []);
+
+  // Fetch reading history for logged-in users
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    interactionService.getReadingHistory()
+      .then((res) => setReadingHistory(res.data))
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -111,6 +126,118 @@ export default function HomePage() {
           </Link>
         ))}
       </div>
+
+      {/* ───── Reading History (only for authenticated users with history) ───── */}
+      {isAuthenticated && readingHistory.length > 0 && (
+        <div className="mt-12">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-text-primary uppercase flex items-center gap-2">
+              <span className="w-1 h-6 bg-accent rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+              <History className="h-5 w-5 text-accent" />
+              Truyện đang đọc dở
+            </h2>
+          </div>
+
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {readingHistory.slice(0, 6).map((rh) => (
+              <Link
+                key={rh.storyId}
+                to={rh.lastChapterId ? `/chapters/${rh.lastChapterId}` : `/stories/${rh.storyId}`}
+                className="group flex gap-4 rounded-xl border border-white/5 bg-surface-light p-3 transition-all hover:border-white/15 hover:shadow-xl hover:shadow-primary/5"
+              >
+                {/* Cover */}
+                <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg bg-surface">
+                  {rh.coverImage ? (
+                    <img src={rh.coverImage} alt={rh.storyTitle} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                      <BookOpen className="h-6 w-6 text-white/20" />
+                    </div>
+                  )}
+                </div>
+                {/* Info */}
+                <div className="flex flex-1 flex-col justify-between min-w-0 py-0.5">
+                  <div>
+                    <h3 className="text-sm font-bold text-text-primary line-clamp-1 group-hover:text-primary transition-colors">
+                      {rh.storyTitle}
+                    </h3>
+                    <p className="text-xs text-text-secondary mt-1 line-clamp-1">
+                      Chương {rh.lastChapterNumber}: {rh.lastChapterTitle}
+                    </p>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-[10px] text-text-secondary mb-1">
+                      <span>Tiến độ</span>
+                      <span>{rh.progressPercent}%</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-surface overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all"
+                        style={{ width: `${rh.progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ───── Trending Stories ───── */}
+      {trendingStories.length > 0 && (
+        <div className="mt-12">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-text-primary uppercase flex items-center gap-2">
+              <span className="w-1 h-6 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+              <Flame className="h-5 w-5 text-red-500" />
+              Truyện thịnh hành
+            </h2>
+          </div>
+
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {trendingStories.map((story) => (
+              <Link
+                key={story.storyId}
+                to={`/stories/${story.storyId}`}
+                className="group flex flex-col gap-2 rounded-xl border border-white/5 bg-surface-light p-2.5 transition-all hover:border-white/15 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
+              >
+                {/* Cover */}
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface">
+                  {story.coverImage ? (
+                    <img
+                      src={story.coverImage}
+                      alt={story.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                      <BookOpen className="h-10 w-10 text-white/20" />
+                    </div>
+                  )}
+                  
+                  {/* Reader count badge */}
+                  <span className="absolute right-1.5 top-1.5 rounded bg-black/70 backdrop-blur px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-white border border-white/10 flex items-center gap-1">
+                    <Flame className="h-3 w-3 text-red-400" />
+                    {story.readerCount}
+                  </span>
+                </div>
+
+                {/* Info */}
+                <div className="flex flex-col gap-0.5 px-1 pb-1">
+                  <h3 className="line-clamp-2 text-sm font-bold text-text-primary transition-colors group-hover:text-primary leading-tight">
+                    {story.title}
+                  </h3>
+                  <p className="text-[11px] text-text-secondary line-clamp-1 mt-1">
+                    {story.authorName}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ───── Recent Stories Grid ───── */}
       <div className="mt-12">

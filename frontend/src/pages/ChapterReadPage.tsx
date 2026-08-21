@@ -37,6 +37,7 @@ export default function ChapterReadPage() {
   const [autoContinue, setAutoContinue] = useState(() => {
     return localStorage.getItem('autoContinue') === 'true';
   });
+  const [showAutoContinueConfirm, setShowAutoContinueConfirm] = useState(false);
 
   // Persist auto-continue preference
   useEffect(() => {
@@ -98,15 +99,23 @@ export default function ChapterReadPage() {
       .catch(() => {
         // 404 = no audio yet, that's expected
         setAudioData(null);
+        // If we are auto-continuing, automatically generate TTS using the last used voice
+        if (window.history.state?.usr?.autoPlay === true && autoContinue) {
+          const lastVoice = localStorage.getItem('lastVoice') || 'vi-VN-HoaiMyNeural';
+          handleGenerateTts(lastVoice);
+        }
       })
       .finally(() => setAudioLoading(false));
-  }, [chapter]);
+  }, [chapter, autoContinue]); // Added autoContinue to deps, but excluded handleGenerateTts to prevent loops, we can just use the function directly or keep it in useCallback
 
   // Handle TTS generation
   const handleGenerateTts = useCallback(
     async (voice: string) => {
       if (!chapter) return;
       setTtsGenerating(true);
+
+      // Save the selected voice to localStorage
+      localStorage.setItem('lastVoice', voice);
 
       try {
         const res = await audioService.generateTts(chapter.id, voice);
@@ -136,6 +145,14 @@ export default function ChapterReadPage() {
       navigate(`/chapters/${nextChapter.id}`, { state: { autoPlay: true } });
     }
   }, [autoContinue, nextChapter, navigate]);
+
+  const handleToggleAutoContinue = useCallback((value: boolean) => {
+    if (value) {
+      setShowAutoContinueConfirm(true);
+    } else {
+      setAutoContinue(false);
+    }
+  }, []);
 
   const handleNextChapter = useCallback(() => {
     if (nextChapter) {
@@ -321,7 +338,7 @@ export default function ChapterReadPage() {
             onNext={nextChapter ? handleNextChapter : undefined}
             onRequestTts={handleGenerateTts}
             autoContinue={autoContinue}
-            onAutoContinueChange={setAutoContinue}
+            onAutoContinueChange={handleToggleAutoContinue}
             autoPlay={shouldAutoPlay}
           />
         </div>
@@ -340,6 +357,34 @@ export default function ChapterReadPage() {
       {/* Bottom navigation */}
       <ChapterNav />
 
+      {/* Custom Confirm Modal for Auto-Continue */}
+      {showAutoContinueConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="mb-2 text-lg font-bold text-text-primary">Bật nghe liên tục</h3>
+            <p className="mb-6 text-sm leading-relaxed text-text-secondary">
+              File âm thanh sẽ tự động lựa chọn loại giọng ở chapter trước nếu chưa có, bạn có đồng ý bật nghe liên tục không?
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowAutoContinueConfirm(false)}
+                className="rounded-xl px-5 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-white/5"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={() => {
+                  setAutoContinue(true);
+                  setShowAutoContinueConfirm(false);
+                }}
+                className="rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+              >
+                Đồng ý
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

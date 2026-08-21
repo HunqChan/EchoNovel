@@ -3,6 +3,7 @@ package com.echonovel.controller;
 import com.echonovel.dto.ApiResponse;
 import com.echonovel.dto.request.LoginRequest;
 import com.echonovel.dto.request.RegisterRequest;
+import com.echonovel.dto.request.SendOtpRequest;
 import com.echonovel.dto.request.ForgotPasswordRequest;
 import com.echonovel.dto.request.ResetPasswordRequest;
 import com.echonovel.dto.request.GoogleAuthRequest;
@@ -22,6 +23,13 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/register/send-otp")
+    public ResponseEntity<ApiResponse<Void>> sendRegisterOtp(
+            @Valid @RequestBody SendOtpRequest request) {
+        authService.sendRegisterOtp(request);
+        return ResponseEntity.ok(ApiResponse.success("Mã OTP đã được gửi về email của bạn", null));
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(

@@ -75,6 +75,7 @@ public class WalletServiceImpl implements WalletService {
         } else {
             user.setVipType(VipType.SUBSCRIPTION);
             user.setVipExpireAt(now.plusDays(pkg.getDurationDays()));
+            user.setIsVip(true);
         }
 
         userRepository.save(user);

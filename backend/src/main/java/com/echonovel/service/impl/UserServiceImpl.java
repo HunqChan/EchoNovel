@@ -44,8 +44,13 @@ public class UserServiceImpl implements UserService {
         user.setVipType(request.getVipType());
         if (request.getVipType() == com.echonovel.enums.VipType.SUBSCRIPTION) {
             user.setVipExpireAt(request.getVipExpireAt());
+            user.setIsVip(true);
+        } else if (request.getVipType() == com.echonovel.enums.VipType.PERMANENT) {
+            user.setVipExpireAt(null);
+            user.setIsVip(true);
         } else {
             user.setVipExpireAt(null);
+            user.setIsVip(false);
         }
         user = userRepository.save(user);
 
@@ -63,6 +68,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         user.setVipType(request.getVipType());
+        user.setIsVip(request.getVipType() != com.echonovel.enums.VipType.NONE);
         user = userRepository.save(user);
 
         log.info("User {} VIP status updated to {}", user.getEmail(), user.getVipType());

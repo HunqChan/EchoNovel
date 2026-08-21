@@ -37,4 +37,9 @@ public interface StoryService {
      * Delete a story (Admin).
      */
     void deleteStory(Long id);
+
+    /**
+     * Get recommended stories with same genres (exclude current story).
+     */
+    List<StoryResponse> getRecommendations(Long storyId);
 }

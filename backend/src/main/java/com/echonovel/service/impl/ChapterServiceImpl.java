@@ -15,6 +15,7 @@ import com.echonovel.repository.StoryRepository;
 import com.echonovel.repository.UserRepository;
 import com.echonovel.repository.UserPurchasedStoryRepository;
 import com.echonovel.service.ChapterService;
+import com.echonovel.service.ReadingHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -36,6 +37,7 @@ public class ChapterServiceImpl implements ChapterService {
     private final UserRepository userRepository;
     private final UserPurchasedStoryRepository userPurchasedStoryRepository;
     private final ChapterMapper chapterMapper;
+    private final ReadingHistoryService readingHistoryService;
 
     /**
      * Get all chapters of a story (summary list, no content)
@@ -88,6 +90,9 @@ public class ChapterServiceImpl implements ChapterService {
                 }
             }
         }
+
+        // Record reading history for authenticated users
+        recordReadingIfAuthenticated(chapter);
 
         return chapterMapper.toResponse(chapter);
     }
@@ -153,5 +158,19 @@ public class ChapterServiceImpl implements ChapterService {
         }
         chapterRepository.deleteById(id);
         log.info("Chapter deleted: ID {}", id);
+    }
+
+    /**
+     * Record reading history if user is authenticated.
+     */
+    private void recordReadingIfAuthenticated(Chapter chapter) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                readingHistoryService.recordReading(auth.getName(), chapter.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to record reading history for chapter {}: {}", chapter.getId(), e.getMessage());
+        }
     }
 }

@@ -67,7 +67,9 @@ export default function AudioPlayer({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
+  const [selectedVoice, setSelectedVoice] = useState(() => {
+    return localStorage.getItem('lastVoice') || VOICES[0].id;
+  });
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
 

@@ -36,8 +36,8 @@ const ForgotPasswordPage: React.FC = () => {
       toast.error('Vui lòng điền đủ thông tin');
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error('Mật khẩu phải từ 6 ký tự trở lên');
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}/.test(newPassword)) {
+      toast.error('Mật khẩu mới phải có ít nhất 8 ký tự, chứa chữ hoa, chữ thường và ký tự đặc biệt');
       return;
     }
     try {

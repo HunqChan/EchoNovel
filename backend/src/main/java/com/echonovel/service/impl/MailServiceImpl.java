@@ -77,7 +77,14 @@ public class MailServiceImpl implements MailService {
     }
     
     private String buildOtpEmailContent(String otp, String type) {
-        String actionText = "yêu cầu " + (type.equals("FORGOT_PASSWORD") ? "khôi phục mật khẩu" : "thay đổi mật khẩu");
+        String actionText;
+        if (type.equals("FORGOT_PASSWORD")) {
+            actionText = "yêu cầu khôi phục mật khẩu";
+        } else if (type.equals("REGISTER")) {
+            actionText = "yêu cầu đăng ký tài khoản mới";
+        } else {
+            actionText = "yêu cầu thay đổi mật khẩu";
+        }
         return "<html>" +
                 "<body style='font-family: Arial, sans-serif; background-color: #f4f4f5; padding: 20px;'>" +
                 "<div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>" +

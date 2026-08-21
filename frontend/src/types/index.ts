@@ -38,6 +38,7 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
+  otp?: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -187,6 +188,11 @@ export interface TopStoryStat {
   chapterCount: number;
 }
 
+export interface DailyStatPoint {
+  date: string;
+  value: number;
+}
+
 export interface AdminStatsResponse {
   totalStories: number;
   totalChapters: number;
@@ -194,6 +200,13 @@ export interface AdminStatsResponse {
   totalVipUsers: number;
   accessLevelDistribution: Record<string, number>;
   topStories: TopStoryStat[];
+  // New fields
+  userGrowth: DailyStatPoint[];
+  revenueStats: DailyStatPoint[];
+  totalVipPackagesSold: number;
+  topReadStories: TopStoryStat[];
+  topLikedStories: TopStoryStat[];
+  genreDistribution: Record<string, number>;
 }
 
 // ========== Wallet & VIP Types ==========
@@ -214,3 +227,56 @@ export interface CoinTransaction {
   description: string;
   createdAt: string;
 }
+
+// ========== Favorite Types ==========
+
+export interface FavoriteResponse {
+  storyId: number;
+  storyTitle: string;
+  coverImage: string | null;
+  authorName: string;
+  createdAt: string;
+}
+
+// ========== Reaction Types ==========
+
+export interface ReactionSummaryResponse {
+  totalLikes: number;
+  totalDislikes: number;
+  userReaction: 'LIKE' | 'DISLIKE' | null;
+}
+
+// ========== Comment Types ==========
+
+export interface CommentResponse {
+  id: number;
+  username: string;
+  avatarUrl: string | null;
+  content: string;
+  createdAt: string;
+}
+
+// ========== Reading History Types ==========
+
+export interface ReadingHistoryResponse {
+  storyId: number;
+  storyTitle: string;
+  coverImage: string | null;
+  lastChapterId: number | null;
+  lastChapterTitle: string | null;
+  lastChapterNumber: number | null;
+  progressPercent: number;
+  updatedAt: string;
+}
+
+// ========== Trending Types ==========
+
+export interface TrendingStoryResponse {
+  storyId: number;
+  title: string;
+  coverImage: string | null;
+  authorName: string;
+  readerCount: number;
+  genres: string[];
+}
+

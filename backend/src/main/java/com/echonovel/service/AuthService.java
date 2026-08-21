@@ -10,6 +10,11 @@ import com.echonovel.dto.response.AuthResponse;
 public interface AuthService {
 
     /**
+     * Send OTP for registration
+     */
+    void sendRegisterOtp(com.echonovel.dto.request.SendOtpRequest request);
+
+    /**
      * Register a new member account.
      */
     AuthResponse register(RegisterRequest request);

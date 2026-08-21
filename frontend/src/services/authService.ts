@@ -12,6 +12,11 @@ export const authService = {
     return response.data;
   },
 
+  sendRegisterOtp: async (data: { email: string }): Promise<ApiResponse<void>> => {
+    const response = await api.post<ApiResponse<void>>('/auth/register/send-otp', data);
+    return response.data;
+  },
+
   sendForgotPasswordOtp: async (data: import('../types').ForgotPasswordRequest): Promise<ApiResponse<void>> => {
     const response = await api.post<ApiResponse<void>>('/auth/forgot-password/send-otp', data);
     return response.data;

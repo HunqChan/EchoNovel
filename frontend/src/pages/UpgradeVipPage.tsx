@@ -10,6 +10,7 @@ export default function UpgradeVipPage() {
   const [packages, setPackages] = useState<VipPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [buyingId, setBuyingId] = useState<number | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<VipPackage | null>(null);
   
   const { user, isAuthenticated, isVip, updateUser } = useAuth();
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function UpgradeVipPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleBuy = async (pkg: VipPackage) => {
+  const handleBuyClick = (pkg: VipPackage) => {
     if (!isAuthenticated) {
       toast.error('Vui lòng đăng nhập để nâng cấp VIP');
       navigate('/login');
@@ -31,6 +32,10 @@ export default function UpgradeVipPage() {
       toast.error('Bạn đã là VIP vĩnh viễn!');
       return;
     }
+    setSelectedPackage(pkg);
+  };
+
+  const handleBuy = async (pkg: VipPackage) => {
     if ((user?.coins || 0) < pkg.priceCoins) {
       toast.error('Số dư xu không đủ! Vui lòng nạp thêm.');
       return;
@@ -59,6 +64,7 @@ export default function UpgradeVipPage() {
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi mua gói');
     } finally {
       setBuyingId(null);
+      setSelectedPackage(null);
     }
   };
 
@@ -134,7 +140,7 @@ export default function UpgradeVipPage() {
 
             {!isVip && (
               <button
-                onClick={() => handleBuy(pkg)}
+                onClick={() => handleBuyClick(pkg)}
                 disabled={buyingId !== null}
                 className="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
@@ -150,6 +156,34 @@ export default function UpgradeVipPage() {
           </div>
         ))}
       </div>
+
+      {selectedPackage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-surface border border-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-2">Xác nhận nâng cấp VIP</h3>
+            <p className="text-gray-400 mb-6 text-sm">
+              Bạn có chắc chắn muốn mua gói <span className="font-bold text-yellow-500">{selectedPackage.name}</span> với giá <span className="font-bold text-yellow-500">{selectedPackage.priceCoins} xu</span> không?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setSelectedPackage(null)}
+                disabled={buyingId !== null}
+                className="px-4 py-2 bg-surface-light hover:bg-white/5 text-gray-300 rounded-xl transition-colors text-sm font-semibold"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => handleBuy(selectedPackage)}
+                disabled={buyingId !== null}
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2 text-sm"
+              >
+                {buyingId === selectedPackage.id && <Loader2 className="w-4 h-4 animate-spin" />}
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

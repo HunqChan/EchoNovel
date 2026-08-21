@@ -277,20 +277,20 @@ npm run build
 | 6 | Trình phát audio HTML5 trên React (AudioPlayer + auto-continue) | [BB] | ✅ Đã xong |
 
 #### Tuần 4 - Tính năng nâng cao
-| # | Việc cần làm | Mức độ |
-|---|-------------|--------|
-| 1 | Gợi ý truyện tương tự theo thể loại | [NC] |
-| 2 | Trang thống kê Admin (Chart.js) | [NC] |
-| 3 | Đánh giá/bình luận, yêu thích | [NC] |
-| 4 | Chế độ nghe liên tục | [NC] |
+| # | Việc cần làm | Mức độ | Trạng thái |
+|---|-------------|--------|------------|
+| 1 | Gợi ý truyện tương tự theo thể loại | [NC] | ✅ Đã xong |
+| 2 | Trang thống kê Admin (Chart.js) | [NC] | ✅ Đã xong |
+| 3 | Đánh giá/bình luận, yêu thích | [NC] | ✅ Đã xong |
+| 4 | Chế độ nghe liên tục | [NC] | |
 
 #### Tuần 5 - Hoàn thiện
-| # | Việc cần làm | Mức độ |
-|---|-------------|--------|
-| 1 | Viết unit test (JUnit 5 + Mockito) | [BB] |
-| 2 | Sửa lỗi, tối ưu giao diện | [BB] |
-| 3 | Dark mode, tùy chỉnh cỡ chữ | [NC] |
-| 4 | README + báo cáo + video demo | [BB] |
+| # | Việc cần làm | Mức độ | Trạng thái |
+|---|-------------|--------|------------|
+| 1 | Viết unit test (JUnit 5 + Mockito) | [BB] | |
+| 2 | Sửa lỗi, tối ưu giao diện | [BB] | |
+| 3 | Dark mode, tùy chỉnh cỡ chữ | [NC] | |
+| 4 | README + báo cáo + video demo | [BB] | |
 
 > [!TIP]
 > **Lưu ý từ đề bài**: Nếu sau 2-3 tuần tiến độ chậm, nên cắt các mục [NC] để đảm bảo hoàn thành [BB]. Hai chức năng trọng tâm không nên cắt: **Khóa chương** và **TTS**.

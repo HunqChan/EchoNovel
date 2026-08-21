@@ -23,4 +23,9 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
 
     @Query("SELECT s.title, COUNT(c) FROM Story s LEFT JOIN Chapter c ON s.id = c.story.id GROUP BY s.id, s.title ORDER BY COUNT(c) DESC")
     java.util.List<Object[]> findTopStoriesByChapterCount(Pageable pageable);
+
+    @Query("SELECT DISTINCT s FROM Story s JOIN s.genres g WHERE g.id IN :genreIds AND s.id <> :excludeId")
+    Page<Story> findRecommendedStories(@Param("genreIds") java.util.Set<Long> genreIds,
+                                       @Param("excludeId") Long excludeId,
+                                       Pageable pageable);
 }

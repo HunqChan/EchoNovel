@@ -52,6 +52,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public routes
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/stories/trending").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/stories/*/reaction-summary").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/stories/*/comments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/stories/*/recommendations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/chapters/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/genres/**").permitAll()

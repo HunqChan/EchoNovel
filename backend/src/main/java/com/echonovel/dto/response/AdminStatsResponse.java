@@ -24,10 +24,26 @@ public class AdminStatsResponse {
     // e.g. [{"title": "Tiên Nghịch", "count": 100}, {"title": "Phàm Nhân", "count": 50}]
     private List<TopStoryStat> topStories;
 
+    // ========== New fields ==========
+    
+    private List<DailyStatPoint> userGrowth;       // New user registrations per day (last 30 days)
+    private List<DailyStatPoint> revenueStats;     // Coin revenue per day
+    private long totalVipPackagesSold;             // Total VIP packages sold
+    private List<TopStoryStat> topReadStories;     // Top stories by reader count
+    private List<TopStoryStat> topLikedStories;    // Top stories by like count
+    private Map<String, Long> genreDistribution;   // Genre distribution
+
     @Data
     @AllArgsConstructor
     public static class TopStoryStat {
         private String title;
         private long chapterCount;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class DailyStatPoint {
+        private String date;
+        private long value;
     }
 }

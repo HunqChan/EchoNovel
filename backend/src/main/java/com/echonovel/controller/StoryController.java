@@ -48,6 +48,12 @@ public class StoryController {
         return ResponseEntity.ok(ApiResponse.success("Mua truyện thành công", null));
     }
 
+    @GetMapping("/api/stories/{id}/recommendations")
+    public ResponseEntity<ApiResponse<java.util.List<StoryResponse>>> getRecommendations(@PathVariable Long id) {
+        java.util.List<StoryResponse> data = storyService.getRecommendations(id);
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
     // ==================== ADMIN APIs ====================
 
     @PostMapping("/api/admin/stories")

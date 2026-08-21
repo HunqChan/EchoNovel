@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/userService';
+import { interactionService } from '../services/interactionService';
 import { toast } from 'react-hot-toast';
-import { User, Shield, Image as ImageIcon, Save, LogOut, Key, Wallet, Crown, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
+import { User, Shield, Image as ImageIcon, Save, LogOut, Key, Wallet, Crown, ArrowUpRight, ArrowDownRight, Clock, Heart, BookOpen } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
-import type { CoinTransaction } from '../types';
+import type { CoinTransaction, FavoriteResponse } from '../types';
 
 const ProfilePage: React.FC = () => {
   const { user, token, refreshToken, logout, login, isVip } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'info' | 'security' | 'wallet'>(() => {
+  const [activeTab, setActiveTab] = useState<'info' | 'security' | 'wallet' | 'favorites'>(() => {
     const searchParams = new URLSearchParams(location.search);
     const tab = searchParams.get('tab');
-    if (tab === 'wallet' || tab === 'security' || tab === 'info') return tab;
+    if (tab === 'wallet' || tab === 'security' || tab === 'info' || tab === 'favorites') return tab;
     return 'info';
   });
 
@@ -35,6 +36,10 @@ const ProfilePage: React.FC = () => {
   // Wallet Tab State
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
   const [loadingTx, setLoadingTx] = useState(false);
+
+  // Favorites Tab State
+  const [favorites, setFavorites] = useState<FavoriteResponse[]>([]);
+  const [loadingFav, setLoadingFav] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -67,6 +72,13 @@ const ProfilePage: React.FC = () => {
         .then((res: any) => setTransactions(res.data.data))
         .catch((err: any) => console.error(err))
         .finally(() => setLoadingTx(false));
+    }
+    if (activeTab === 'favorites' && token) {
+      setLoadingFav(true);
+      interactionService.getUserFavorites()
+        .then((res) => setFavorites(res.data))
+        .catch((err: any) => console.error(err))
+        .finally(() => setLoadingFav(false));
     }
   }, [activeTab, token]);
 
@@ -109,8 +121,8 @@ const ProfilePage: React.FC = () => {
       toast.error('Vui lòng điền đầy đủ thông tin');
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}/.test(newPassword)) {
+      toast.error('Mật khẩu mới phải có ít nhất 8 ký tự, chứa chữ hoa, chữ thường và ký tự đặc biệt');
       return;
     }
     try {
@@ -175,6 +187,14 @@ const ProfilePage: React.FC = () => {
               >
                 <Wallet className="w-5 h-5" />
                 Ví & VIP
+              </button>
+
+              <button
+                onClick={() => setActiveTab('favorites')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'favorites' ? 'bg-primary/20 text-primary font-medium' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+              >
+                <Heart className="w-5 h-5" />
+                Truyện yêu thích
               </button>
 
               <button
@@ -415,6 +435,45 @@ const ProfilePage: React.FC = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'favorites' && (
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-6">Truyện yêu thích</h3>
+                {loadingFav ? (
+                  <div className="text-center py-8 text-gray-500">Đang tải...</div>
+                ) : favorites.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-900/50 rounded-xl border border-gray-800">
+                    <Heart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-500">Bạn chưa yêu thích truyện nào.</p>
+                    <Link to="/stories" className="inline-block mt-3 text-sm text-primary hover:underline">Khám phá truyện →</Link>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+                    {favorites.map((fav) => (
+                      <Link
+                        key={fav.storyId}
+                        to={`/stories/${fav.storyId}`}
+                        className="group flex flex-col gap-2 rounded-xl border border-gray-800 bg-gray-900/50 p-2.5 transition-all hover:border-primary/30 hover:shadow-lg hover:-translate-y-1"
+                      >
+                        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-gray-800">
+                          {fav.coverImage ? (
+                            <img src={fav.coverImage} alt={fav.storyTitle} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          ) : (
+                            <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                              <BookOpen className="h-10 w-10 text-white/20" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="px-1 pb-1">
+                          <h4 className="line-clamp-2 text-sm font-bold text-white group-hover:text-primary transition-colors">{fav.storyTitle}</h4>
+                          <p className="text-[11px] text-gray-400 mt-1">{fav.authorName}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

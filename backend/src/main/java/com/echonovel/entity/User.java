@@ -44,6 +44,10 @@ public class User {
     @Builder.Default
     private VipType vipType = VipType.NONE;
 
+    @Column(name = "is_vip")
+    @Builder.Default
+    private Boolean isVip = false;
+
     @Column(name = "vip_expire_at")
     private LocalDateTime vipExpireAt;
 

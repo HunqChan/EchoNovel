@@ -60,6 +60,14 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenRepository.save(refreshToken);
     }
 
+    @Override
+    public void sendRegisterOtp(com.echonovel.dto.request.SendOtpRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+        mailService.generateAndSendOtp(request.getEmail(), "REGISTER");
+    }
+
     /**
      * Register a new member account
      */
@@ -72,6 +80,14 @@ public class AuthServiceImpl implements AuthService {
         }
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
+        }
+
+        if (request.getOtp() == null || request.getOtp().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_OTP, "Mã OTP không được để trống");
+        }
+
+        if (!mailService.verifyOtp(request.getEmail(), request.getOtp())) {
+            throw new AppException(ErrorCode.INVALID_OTP);
         }
 
         // Create user via mapper + set security fields

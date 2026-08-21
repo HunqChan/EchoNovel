@@ -18,4 +18,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
     long countByVipTypeNot(com.echonovel.enums.VipType vipType);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT FUNCTION('DATE', u.createdAt), COUNT(u) FROM User u " +
+        "WHERE u.createdAt >= :since GROUP BY FUNCTION('DATE', u.createdAt) ORDER BY FUNCTION('DATE', u.createdAt) ASC"
+    )
+    java.util.List<Object[]> countNewUsersByDay(@org.springframework.data.repository.query.Param("since") java.time.LocalDateTime since);
 }

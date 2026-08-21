@@ -13,31 +13,98 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Validation errors
+  const [errors, setErrors] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // OTP modal state
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { username: '', email: '', password: '', confirmPassword: '' };
+
+    if (!username.trim()) {
+      newErrors.username = 'Tên người dùng không được để trống';
+      isValid = false;
+    } else if (username.length < 3) {
+      newErrors.username = 'Tên người dùng phải từ 3 ký tự trở lên';
+      isValid = false;
+    }
+
+    if (!email.trim()) {
+      newErrors.email = 'Email không được để trống';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Email không hợp lệ';
+      isValid = false;
+    }
+
+    if (!password) {
+      newErrors.password = 'Mật khẩu không được để trống';
+      isValid = false;
+    } else if (password.length < 8) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+      isValid = false;
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) {
+      newErrors.password = 'Mật khẩu phải chứa chữ hoa, chữ thường và ký tự đặc biệt';
+      isValid = false;
+    }
 
     if (password !== confirmPassword) {
-      toast.error('Mật khẩu xác nhận không khớp');
+      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInitialSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('Mật khẩu phải có ít nhất 6 ký tự');
+    setLoading(true);
+    try {
+      await authService.sendRegisterOtp({ email });
+      setShowOtpModal(true);
+      toast.success('Mã OTP đã được gửi về email của bạn');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Có lỗi khi gửi OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtpAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp.trim()) {
+      toast.error('Vui lòng nhập mã OTP');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await authService.register({ username, email, password });
+      const response = await authService.register({ username, email, password, otp });
       const { token, refreshToken, user } = response.data;
 
       login(token, refreshToken, user);
+      setShowOtpModal(false);
       toast.success('Đăng ký thành công! Chào mừng bạn đến với EchoNovel 🎉');
       navigate('/');
     } catch (err) {
@@ -82,7 +149,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleInitialSubmit} className="space-y-5">
             {/* Username */}
             <div>
               <label htmlFor="reg-username" className="mb-1.5 block text-sm font-medium text-text-secondary">
@@ -93,10 +160,11 @@ export default function RegisterPage() {
                 type="text"
                 required
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => { setUsername(e.target.value); setErrors(p => ({...p, username: ''})) }}
                 placeholder="echoreader"
-                className="w-full rounded-xl border border-white/10 bg-surface px-4 py-3 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={`w-full rounded-xl border ${errors.username ? 'border-red-500' : 'border-white/10'} bg-surface px-4 py-3 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20`}
               />
+              {errors.username && <p className="mt-1.5 text-xs text-red-500">{errors.username}</p>}
             </div>
 
             {/* Email */}
@@ -109,10 +177,11 @@ export default function RegisterPage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setErrors(p => ({...p, email: ''})) }}
                 placeholder="name@example.com"
-                className="w-full rounded-xl border border-white/10 bg-surface px-4 py-3 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={`w-full rounded-xl border ${errors.email ? 'border-red-500' : 'border-white/10'} bg-surface px-4 py-3 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20`}
               />
+              {errors.email && <p className="mt-1.5 text-xs text-red-500">{errors.email}</p>}
             </div>
 
             {/* Password */}
@@ -126,9 +195,9 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})) }}
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full rounded-xl border border-white/10 bg-surface px-4 py-3 pr-12 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className={`w-full rounded-xl border ${errors.password ? 'border-red-500' : 'border-white/10'} bg-surface px-4 py-3 pr-12 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20`}
                 />
                 <button
                   type="button"
@@ -138,6 +207,7 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {errors.password && <p className="mt-1.5 text-xs text-red-500">{errors.password}</p>}
             </div>
 
             {/* Confirm Password */}
@@ -150,10 +220,11 @@ export default function RegisterPage() {
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({...p, confirmPassword: ''})) }}
                 placeholder="Nhập lại mật khẩu"
-                className="w-full rounded-xl border border-white/10 bg-surface px-4 py-3 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={`w-full rounded-xl border ${errors.confirmPassword ? 'border-red-500' : 'border-white/10'} bg-surface px-4 py-3 text-sm text-text-primary placeholder-text-secondary/50 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20`}
               />
+              {errors.confirmPassword && <p className="mt-1.5 text-xs text-red-500">{errors.confirmPassword}</p>}
             </div>
 
             {/* Submit */}
@@ -221,6 +292,51 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-surface border border-gray-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-2 text-center">Xác thực Email</h3>
+            <p className="text-gray-400 mb-6 text-sm text-center">
+              Vui lòng nhập mã OTP gồm 6 chữ số đã được gửi đến email <br/>
+              <span className="font-bold text-primary">{email}</span>
+            </p>
+            
+            <form onSubmit={handleVerifyOtpAndRegister}>
+              <div className="mb-6">
+                <input
+                  type="text"
+                  maxLength={6}
+                  required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Nhập mã OTP (6 số)"
+                  className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-3 text-center text-lg tracking-[0.2em] font-mono text-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowOtpModal(false)}
+                  disabled={loading}
+                  className="flex-1 py-3 bg-surface-light hover:bg-white/5 text-gray-300 rounded-xl transition-colors font-semibold"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2"
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Xác nhận
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

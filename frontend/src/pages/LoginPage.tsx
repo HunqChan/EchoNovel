@@ -87,14 +87,9 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label htmlFor="login-password" className="block text-sm font-medium text-text-secondary">
-                  Mật khẩu
-                </label>
-                <Link to="/forgot-password" className="text-xs text-primary hover:text-secondary transition-colors">
-                  Quên mật khẩu?
-                </Link>
-              </div>
+              <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-text-secondary">
+                Mật khẩu
+              </label>
               <div className="relative">
                 <input
                   id="login-password"
@@ -112,6 +107,11 @@ export default function LoginPage() {
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
+              </div>
+              <div className="mt-2 flex justify-end">
+                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-secondary transition-colors">
+                  Quên mật khẩu?
+                </Link>
               </div>
             </div>
 

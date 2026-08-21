@@ -162,4 +162,28 @@ public class StoryServiceImpl implements StoryService {
         }
         return genres;
     }
+
+    /**
+     * Get recommended stories that share at least one genre with the given story.
+     */
+    @Override
+    public List<StoryResponse> getRecommendations(Long storyId) {
+        Story story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORY_NOT_FOUND));
+
+        Set<Long> genreIds = story.getGenres().stream()
+                .map(Genre::getId)
+                .collect(Collectors.toSet());
+
+        if (genreIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return storyRepository.findRecommendedStories(genreIds, storyId,
+                        org.springframework.data.domain.PageRequest.of(0, 6))
+                .getContent()
+                .stream()
+                .map(storyMapper::toResponse)
+                .collect(Collectors.toList());
+    }
 }
