@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 // Layouts
 import MainLayout from './components/MainLayout';
 import AdminLayout from './components/AdminLayout';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Route guards
 import { ProtectedRoute, AdminRoute } from './components/RouteGuards';
@@ -36,8 +37,9 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
-      <AuthProvider>
-        <Router>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
         <Routes>
           {/* ═══════ Public routes with MainLayout ═══════ */}
           <Route element={<MainLayout />}>
@@ -80,27 +82,28 @@ function App() {
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#2d2a3e',
-            color: '#f1f5f9',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'var(--color-surface-light)',
+            color: 'var(--color-text-primary)',
+            border: '1px solid rgba(128, 128, 128, 0.2)',
             borderRadius: '12px',
             fontSize: '14px',
           },
           success: {
             iconTheme: {
               primary: '#6366f1',
-              secondary: '#f1f5f9',
+              secondary: 'var(--color-surface)',
             },
           },
           error: {
             iconTheme: {
               primary: '#ef4444',
-              secondary: '#f1f5f9',
+              secondary: 'var(--color-surface)',
             },
           },
         }}
       />
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </GoogleOAuthProvider>
   );
 }

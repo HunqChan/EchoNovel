@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { chapterService } from '../services/chapterService';
 import { audioService } from '../services/audioService';
@@ -15,11 +15,20 @@ import {
   AlertTriangle,
   BookOpen,
   ArrowLeft,
+  Settings,
+  X,
 } from 'lucide-react';
 
 type AccessError = {
   type: 'UNAUTHORIZED' | 'VIP_REQUIRED' | 'GENERIC';
   message: string;
+};
+
+type ReaderSettings = {
+  fontSize: number;
+  lineHeight: 'normal' | 'relaxed' | 'loose';
+  fontFamily: 'sans' | 'serif' | 'mono';
+  readerTheme: 'default' | 'sepia' | 'oled' | 'dim';
 };
 
 export default function ChapterReadPage() {
@@ -43,6 +52,36 @@ export default function ChapterReadPage() {
   useEffect(() => {
     localStorage.setItem('autoContinue', String(autoContinue));
   }, [autoContinue]);
+
+  // Reader Customizer state
+  const [readerSettings, setReaderSettings] = useState<ReaderSettings>(() => {
+    const saved = localStorage.getItem('echonovel_reader_settings');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return { fontSize: 18, lineHeight: 'relaxed', fontFamily: 'sans', readerTheme: 'default' };
+  });
+  const [showReaderSettings, setShowReaderSettings] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('echonovel_reader_settings', JSON.stringify(readerSettings));
+  }, [readerSettings]);
+
+  // Handle click outside to close settings
+  const settingsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showReaderSettings && settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setShowReaderSettings(false);
+      }
+    };
+    if (showReaderSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showReaderSettings]);
 
   // Fetch chapter content
   useEffect(() => {
@@ -306,14 +345,22 @@ export default function ChapterReadPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       {/* Header */}
-      <div className="relative mb-6 text-center pt-8 sm:pt-0">
+      <div className="relative mb-6 text-center pt-14 sm:pt-0">
         <Link
           to={`/stories/${chapter.storyId}`}
-          className="absolute left-0 top-0 flex items-center gap-2 rounded-xl border border-white/10 bg-surface-light px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-primary/50 hover:text-primary"
+          className="absolute left-0 top-0 flex items-center gap-2 rounded-xl border border-black/5 dark:border-white/10 bg-surface-light px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-primary/50 hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="hidden sm:inline">Quay lại</span>
         </Link>
+        
+        <button
+          onClick={() => setShowReaderSettings(true)}
+          className="absolute right-0 top-0 flex items-center gap-2 rounded-xl border border-black/5 dark:border-white/10 bg-surface-light px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-primary/50 hover:text-primary"
+        >
+          <Settings className="h-4 w-4" />
+          <span className="hidden sm:inline">Giao diện</span>
+        </button>
 
         <Link
           to={`/stories/${chapter.storyId}`}
@@ -345,10 +392,21 @@ export default function ChapterReadPage() {
       )}
 
       {/* Chapter content */}
-      <article className="my-8 rounded-2xl border border-white/10 bg-surface-light p-6 sm:p-8 lg:p-10">
+      <article 
+        className={`my-8 rounded-2xl border border-black/5 dark:border-white/10 p-6 sm:p-8 lg:p-10 transition-colors duration-200
+          ${readerSettings.readerTheme === 'default' ? 'bg-surface-light text-text-primary/90' : ''}
+          ${readerSettings.readerTheme === 'sepia' ? '!bg-[#f4ecd8] !text-[#5b4636]' : ''}
+          ${readerSettings.readerTheme === 'oled' ? '!bg-black !text-[#e5e5e5]' : ''}
+          ${readerSettings.readerTheme === 'dim' ? '!bg-[#18181b] !text-[#a1a1aa]' : ''}
+        `}
+      >
         <div
-          className="prose-chapter text-base leading-8 text-text-primary/90 whitespace-pre-line"
-          style={{ fontSize: '17px', lineHeight: '1.9' }}
+          className="prose-chapter whitespace-pre-line transition-all duration-200"
+          style={{ 
+            fontSize: `${readerSettings.fontSize}px`, 
+            lineHeight: readerSettings.lineHeight === 'normal' ? 1.5 : readerSettings.lineHeight === 'relaxed' ? 1.8 : 2.2,
+            fontFamily: readerSettings.fontFamily === 'sans' ? 'inherit' : readerSettings.fontFamily === 'serif' ? 'Merriweather, "Times New Roman", serif' : 'monospace',
+          }}
         >
           {chapter.content ? chapter.content.normalize('NFC') : 'Chương này chưa có nội dung.'}
         </div>
@@ -368,7 +426,7 @@ export default function ChapterReadPage() {
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowAutoContinueConfirm(false)}
-                className="rounded-xl px-5 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-white/5"
+                className="rounded-xl px-5 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-black/5 dark:hover:bg-white/5"
               >
                 Hủy bỏ
               </button>
@@ -380,6 +438,103 @@ export default function ChapterReadPage() {
                 className="rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
               >
                 Đồng ý
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reader Customizer Panel (Floating non-blocking) */}
+      {showReaderSettings && (
+        <div 
+          ref={settingsRef}
+          className="fixed top-24 right-4 sm:right-8 lg:right-12 z-50 w-full max-w-[320px] sm:max-w-sm rounded-2xl border border-black/10 dark:border-white/10 bg-surface/95 backdrop-blur-xl p-5 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200"
+        >
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-text-primary">Tùy chỉnh giao diện</h3>
+              <button onClick={() => setShowReaderSettings(false)} className="rounded-lg p-1 text-text-secondary hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Font Size */}
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-text-secondary mb-2">Cỡ chữ ({readerSettings.fontSize}px)</label>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setReaderSettings(s => ({ ...s, fontSize: Math.max(14, s.fontSize - 2) }))}
+                  className="flex-1 py-2 rounded-lg bg-surface-light text-text-primary hover:bg-black/5 dark:hover:bg-white/5 border border-black/5 dark:border-white/10 font-bold transition-colors"
+                >A-</button>
+                <button 
+                  onClick={() => setReaderSettings(s => ({ ...s, fontSize: Math.min(30, s.fontSize + 2) }))}
+                  className="flex-1 py-2 rounded-lg bg-surface-light text-text-primary hover:bg-black/5 dark:hover:bg-white/5 border border-black/5 dark:border-white/10 font-bold text-lg transition-colors"
+                >A+</button>
+              </div>
+            </div>
+
+            {/* Line Height */}
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-text-secondary mb-2">Giãn dòng</label>
+              <div className="flex gap-2">
+                {(['normal', 'relaxed', 'loose'] as const).map(lh => (
+                  <button 
+                    key={lh}
+                    onClick={() => setReaderSettings(s => ({ ...s, lineHeight: lh }))}
+                    className={`flex-1 py-2 rounded-lg border transition-colors ${readerSettings.lineHeight === lh ? 'border-primary text-primary bg-primary/10' : 'border-black/5 dark:border-white/10 bg-surface-light text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'}`}
+                  >
+                    {lh === 'normal' ? 'Hẹp' : lh === 'relaxed' ? 'Vừa' : 'Rộng'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Font Family */}
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-text-secondary mb-2">Phông chữ</label>
+              <div className="flex gap-2">
+                {(['sans', 'serif', 'mono'] as const).map(ff => (
+                  <button 
+                    key={ff}
+                    onClick={() => setReaderSettings(s => ({ ...s, fontFamily: ff }))}
+                    className={`flex-1 py-2 rounded-lg border text-sm transition-colors ${readerSettings.fontFamily === ff ? 'border-primary text-primary bg-primary/10' : 'border-black/5 dark:border-white/10 bg-surface-light text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'}`}
+                    style={{ fontFamily: ff === 'sans' ? 'sans-serif' : ff === 'serif' ? 'serif' : 'monospace' }}
+                  >
+                    {ff === 'sans' ? 'Sans' : ff === 'serif' ? 'Serif' : 'Mono'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Theme */}
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">Màu nền trang đọc</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={() => setReaderSettings(s => ({ ...s, readerTheme: 'default' }))}
+                  className={`py-2 rounded-lg border text-text-primary bg-surface-light transition-colors ${readerSettings.readerTheme === 'default' ? 'border-primary ring-1 ring-primary' : 'border-black/5 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'}`}
+                >Mặc định</button>
+                <button 
+                  onClick={() => setReaderSettings(s => ({ ...s, readerTheme: 'sepia' }))}
+                  className={`py-2 rounded-lg border bg-[#f4ecd8] text-[#5b4636] transition-colors ${readerSettings.readerTheme === 'sepia' ? 'border-primary ring-1 ring-primary' : 'border-transparent hover:opacity-80'}`}
+                >Giấy cổ</button>
+                <button 
+                  onClick={() => setReaderSettings(s => ({ ...s, readerTheme: 'oled' }))}
+                  className={`py-2 rounded-lg border bg-black text-[#e5e5e5] transition-colors ${readerSettings.readerTheme === 'oled' ? 'border-primary ring-1 ring-primary' : 'border-transparent hover:opacity-80'}`}
+                >OLED</button>
+                <button 
+                  onClick={() => setReaderSettings(s => ({ ...s, readerTheme: 'dim' }))}
+                  className={`py-2 rounded-lg border bg-[#18181b] text-[#a1a1aa] transition-colors ${readerSettings.readerTheme === 'dim' ? 'border-primary ring-1 ring-primary' : 'border-transparent hover:opacity-80'}`}
+                >Xám dịu</button>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/10 text-center">
+              <button
+                onClick={() => setShowReaderSettings(false)}
+                className="w-full rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark"
+              >
+                Đóng cài đặt
               </button>
             </div>
           </div>

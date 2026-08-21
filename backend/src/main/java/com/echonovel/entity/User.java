@@ -54,6 +54,9 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column(name = "avatar_public_id")
+    private String avatarPublicId;
+
     @Column(name = "provider", length = 20)
     @Builder.Default
     private String provider = "LOCAL";

@@ -5,6 +5,7 @@ import com.echonovel.dto.response.StoryResponse;
 import com.echonovel.enums.StoryStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -37,6 +38,11 @@ public interface StoryService {
      * Delete a story (Admin).
      */
     void deleteStory(Long id);
+
+    /**
+     * Upload and update story cover image via Cloudinary.
+     */
+    StoryResponse updateCoverImage(Long storyId, MultipartFile file);
 
     /**
      * Get recommended stories with same genres (exclude current story).

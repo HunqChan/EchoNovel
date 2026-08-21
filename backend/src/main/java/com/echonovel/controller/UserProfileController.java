@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,6 +31,19 @@ public class UserProfileController {
             @Valid @RequestBody UserProfileUpdateRequest request) {
         UserResponse data = userService.updateProfile(authentication.getName(), request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin thành công", data));
+    }
+
+    /**
+     * Upload avatar image file to Cloudinary.
+     * Accepts JPG, PNG, WebP files up to 5MB.
+     */
+    @PostMapping("/profile/avatar")
+    public ResponseEntity<ApiResponse<UserResponse>> uploadAvatar(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file) {
+        UploadController.validateImageFile(file);
+        UserResponse data = userService.updateAvatar(authentication.getName(), file);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật ảnh đại diện thành công", data));
     }
 
     @PostMapping("/change-password/send-otp")

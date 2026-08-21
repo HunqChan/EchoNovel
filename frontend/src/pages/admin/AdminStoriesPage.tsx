@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Loader2, Plus, Edit2, Trash2, 
-  ChevronRight, ChevronDown, FileAudio, Upload
+  ChevronRight, ChevronDown, FileAudio, Upload as UploadIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from 'react-select'; // react-select for searchable dropdown
@@ -11,6 +11,7 @@ import { authorService } from '../../services/authorService';
 import { genreService } from '../../services/genreService';
 import { chapterService } from '../../services/chapterService';
 import { audioService } from '../../services/audioService';
+import { uploadService } from '../../services/uploadService';
 
 import type { 
   StoryResponse, AuthorResponse, GenreResponse, StoryRequest,
@@ -106,6 +107,12 @@ export default function AdminStoriesPage() {
   const [selectedAudioChapter, setSelectedAudioChapter] = useState<ChapterResponse | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploadingAudio, setUploadingAudio] = useState(false);
+
+  // --- Cover Image Upload State ---
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
 
   // --- Init Fetch ---
   const fetchInitialData = async () => {
@@ -210,6 +217,9 @@ export default function AdminStoriesPage() {
       });
     }
     setShowStoryModal(true);
+    // Reset cover file state
+    setCoverFile(null);
+    setCoverPreview(null);
   };
 
   const handleSubmitStory = async (e: React.FormEvent) => {
@@ -222,9 +232,31 @@ export default function AdminStoriesPage() {
     try {
       if (editingStory) {
         await storyService.updateStory(editingStory.id, storyFormData);
+        // Upload cover image file if selected
+        if (coverFile) {
+          setUploadingCover(true);
+          try {
+            await uploadService.uploadStoryCover(editingStory.id, coverFile);
+          } catch {
+            toast.error('Lỗi khi upload ảnh bìa');
+          } finally {
+            setUploadingCover(false);
+          }
+        }
         toast.success('Cập nhật truyện thành công');
       } else {
-        await storyService.createStory(storyFormData);
+        const createRes = await storyService.createStory(storyFormData);
+        // Upload cover image file for new story if selected
+        if (coverFile && createRes.data?.id) {
+          setUploadingCover(true);
+          try {
+            await uploadService.uploadStoryCover(createRes.data.id, coverFile);
+          } catch {
+            toast.error('Lỗi khi upload ảnh bìa');
+          } finally {
+            setUploadingCover(false);
+          }
+        }
         toast.success('Thêm truyện mới thành công');
       }
       setShowStoryModal(false);
@@ -695,7 +727,7 @@ export default function AdminStoriesPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-text-secondary">Giá mua lẻ (Xu)</label>
                     <input
@@ -707,15 +739,68 @@ export default function AdminStoriesPage() {
                       className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-primary/50"
                     />
                   </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-text-secondary">Link Ảnh bìa (URL)</label>
-                    <input
-                      type="url"
-                      value={storyFormData.coverImage}
-                      onChange={(e) => setStoryFormData({ ...storyFormData, coverImage: e.target.value })}
-                      className="w-full rounded-xl border border-white/10 bg-surface-light px-4 py-2.5 text-text-primary outline-none focus:border-primary/50"
-                      placeholder="https://example.com/image.jpg"
-                    />
+
+                  <div className="mt-4">
+                    <label className="mb-1.5 block text-sm font-medium text-text-secondary">Ảnh bìa truyện</label>
+                    <div className="flex items-start gap-4">
+                      {/* Cover Preview */}
+                      {(coverPreview || storyFormData.coverImage) && (
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={coverPreview || storyFormData.coverImage || ''}
+                            alt="Cover preview"
+                            className="h-24 w-16 rounded-lg object-cover border border-white/10 shadow-lg"
+                          />
+                          {uploadingCover && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
+                              <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2">
+                        {/* File Upload Button */}
+                        <input
+                          ref={coverFileRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                                toast.error('Chỉ hỗ trợ file ảnh JPG, PNG, WebP');
+                                return;
+                              }
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('Dung lượng file không được vượt quá 5MB');
+                                return;
+                              }
+                              setCoverFile(file);
+                              setCoverPreview(URL.createObjectURL(file));
+                            }
+                          }}
+                          className="hidden"
+                          id="cover-file-input"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => coverFileRef.current?.click()}
+                          className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-text-primary transition-colors hover:bg-white/20"
+                        >
+                          <UploadIcon className="h-4 w-4" />
+                          {coverFile ? 'Thay ảnh khác' : 'Tải ảnh bìa lên'}
+                        </button>
+                        <p className="text-[10px] text-text-secondary">JPG, PNG, WebP. Tối đa 5MB.</p>
+                        {/* Fallback: URL input */}
+                        <input
+                          type="url"
+                          value={storyFormData.coverImage}
+                          onChange={(e) => setStoryFormData({ ...storyFormData, coverImage: e.target.value })}
+                          className="w-full rounded-lg border border-white/10 bg-surface-light px-3 py-2 text-xs text-text-primary outline-none focus:border-primary/50"
+                          placeholder="Hoặc dán link ảnh bìa..."
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -849,7 +934,7 @@ export default function AdminStoriesPage() {
                 disabled={!audioFile || uploadingAudio}
                 className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-green-500/25 hover:bg-green-600 disabled:opacity-50"
               >
-                {uploadingAudio ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploadingAudio ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadIcon className="h-4 w-4" />}
                 Tải lên
               </button>
             </div>

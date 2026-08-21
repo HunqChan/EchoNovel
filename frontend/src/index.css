@@ -1,15 +1,31 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --app-bg: #f8fafc;
+  --app-bg-light: #ffffff;
+  --app-text: #0f172a;
+  --app-text-secondary: #475569;
+}
+
+.dark {
+  --app-bg: #1e1b2e;
+  --app-bg-light: #2d2a3e;
+  --app-text: #f1f5f9;
+  --app-text-secondary: #94a3b8;
+}
+
 /* ========== Custom Design Tokens ========== */
 @theme {
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
   --color-secondary: #8b5cf6;
   --color-accent: #f59e0b;
-  --color-surface: #1e1b2e;
-  --color-surface-light: #2d2a3e;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
+  --color-surface: var(--app-bg);
+  --color-surface-light: var(--app-bg-light);
+  --color-text-primary: var(--app-text);
+  --color-text-secondary: var(--app-text-secondary);
 }
 
 /* ========== Base Styles ========== */

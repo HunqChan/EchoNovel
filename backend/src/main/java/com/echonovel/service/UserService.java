@@ -3,6 +3,7 @@ package com.echonovel.service;
 import com.echonovel.dto.request.UserUpdateRequest;
 import com.echonovel.dto.request.VipUpdateRequest;
 import com.echonovel.dto.response.UserResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -40,6 +41,11 @@ public interface UserService {
      * Update current user profile.
      */
     UserResponse updateProfile(String email, com.echonovel.dto.request.UserProfileUpdateRequest request);
+
+    /**
+     * Upload and update user avatar via Cloudinary.
+     */
+    UserResponse updateAvatar(String email, MultipartFile file);
 
     /**
      * Send OTP for change password.

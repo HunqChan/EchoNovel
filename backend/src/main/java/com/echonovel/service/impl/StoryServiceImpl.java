@@ -16,6 +16,7 @@ import com.echonovel.repository.GenreRepository;
 import com.echonovel.repository.StoryRepository;
 import com.echonovel.repository.UserRepository;
 import com.echonovel.repository.UserPurchasedStoryRepository;
+import com.echonovel.service.CloudinaryService;
 import com.echonovel.service.StoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,6 +48,7 @@ public class StoryServiceImpl implements StoryService {
     private final UserPurchasedStoryRepository userPurchasedStoryRepository;
     private final StoryMapper storyMapper;
     private final ChapterMapper chapterMapper;
+    private final CloudinaryService cloudinaryService;
 
     /**
      * Get all stories with filtering and pagination
@@ -161,6 +165,35 @@ public class StoryServiceImpl implements StoryService {
             }
         }
         return genres;
+    }
+
+    /**
+     * Upload and update story cover image via Cloudinary.
+     */
+    @Override
+    @Transactional
+    public StoryResponse updateCoverImage(Long storyId, MultipartFile file) {
+        Story story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORY_NOT_FOUND));
+
+        // Delete old cover image from Cloudinary if exists
+        if (story.getCoverImagePublicId() != null && !story.getCoverImagePublicId().isEmpty()) {
+            cloudinaryService.deleteImage(story.getCoverImagePublicId());
+        }
+
+        // Upload new cover image
+        Map<String, String> uploadResult = cloudinaryService.uploadImage(file, "echonovel/covers");
+        String publicId = uploadResult.get("publicId");
+
+        // Generate optimized URL (400x600 portrait, smart crop)
+        String optimizedUrl = cloudinaryService.getOptimizedUrl(publicId, 400, 600, "fill");
+
+        story.setCoverImage(optimizedUrl);
+        story.setCoverImagePublicId(publicId);
+        story = storyRepository.save(story);
+
+        log.info("Story cover image updated via Cloudinary: storyId={}, publicId={}", storyId, publicId);
+        return storyMapper.toResponse(story);
     }
 
     /**

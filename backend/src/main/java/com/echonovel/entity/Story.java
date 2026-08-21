@@ -42,6 +42,9 @@ public class Story {
     @Column(name = "cover_image")
     private String coverImage;
 
+    @Column(name = "cover_image_public_id")
+    private String coverImagePublicId;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

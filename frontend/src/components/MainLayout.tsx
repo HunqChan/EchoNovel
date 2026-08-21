@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import {
   BookOpen,
   LogOut,
@@ -10,10 +11,13 @@ import {
   ShieldCheck,
   LogIn,
   UserPlus,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 export default function MainLayout() {
   const { user, isAuthenticated, isAdmin, isVip, logout } = useAuth();
+  const { theme, setTheme, isDark } = useTheme();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -24,9 +28,9 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface text-text-primary">
+    <div className="min-h-screen flex flex-col bg-surface text-text-primary transition-colors duration-200">
       {/* ───── Navbar ───── */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-surface/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-black/5 dark:border-white/10 bg-surface/80 backdrop-blur-xl transition-colors duration-200">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
@@ -46,10 +50,19 @@ export default function MainLayout() {
             </Link>
             <Link
               to="/stories"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary"
             >
               Kho truyện
             </Link>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className="ml-2 rounded-lg p-2 text-text-secondary transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary"
+              title={isDark ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
 
             {isAuthenticated ? (
               <>
@@ -106,18 +119,26 @@ export default function MainLayout() {
             )}
           </nav>
 
-          {/* Mobile hamburger */}
-          <button
-            className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/5 md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          {/* Mobile hamburger & Theme */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            >
+              {isDark ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+            </button>
+            <button
+              className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="border-t border-white/10 bg-surface-light px-4 pb-4 pt-2 md:hidden">
+          <div className="border-t border-black/5 dark:border-white/10 bg-surface-light px-4 pb-4 pt-2 md:hidden transition-colors duration-200">
             <Link
               to="/"
               onClick={() => setMobileMenuOpen(false)}
@@ -198,7 +219,7 @@ export default function MainLayout() {
       </main>
 
       {/* ───── Footer ───── */}
-      <footer className="border-t border-white/10 bg-surface py-6">
+      <footer className="border-t border-black/5 dark:border-white/10 bg-surface py-6 transition-colors duration-200">
         <div className="mx-auto max-w-7xl px-4 text-center text-sm text-text-secondary">
           © 2026 EchoNovel — Đọc &amp; Nghe Truyện Online
         </div>

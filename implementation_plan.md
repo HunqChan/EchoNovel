@@ -282,7 +282,7 @@ npm run build
 | 1 | Gợi ý truyện tương tự theo thể loại | [NC] | ✅ Đã xong |
 | 2 | Trang thống kê Admin (Chart.js) | [NC] | ✅ Đã xong |
 | 3 | Đánh giá/bình luận, yêu thích | [NC] | ✅ Đã xong |
-| 4 | Chế độ nghe liên tục | [NC] | |
+| 4 | Chế độ nghe liên tục | [NC] | ✅ Đã xong |
 
 #### Tuần 5 - Hoàn thiện
 | # | Việc cần làm | Mức độ | Trạng thái |

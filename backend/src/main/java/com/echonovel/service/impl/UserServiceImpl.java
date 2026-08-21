@@ -8,15 +8,18 @@ import com.echonovel.exception.AppException;
 import com.echonovel.exception.ErrorCode;
 import com.echonovel.mapper.UserMapper;
 import com.echonovel.repository.UserRepository;
+import com.echonovel.service.CloudinaryService;
 import com.echonovel.service.UserService;
 import com.echonovel.service.MailService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryService cloudinaryService;
 
     /**
      * Update user (Role, VIP status)
@@ -118,6 +122,32 @@ public class UserServiceImpl implements UserService {
 
         user = userRepository.save(user);
         log.info("User profile updated: {}", email);
+        return userMapper.toResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateAvatar(String email, MultipartFile file) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Delete old avatar from Cloudinary if exists
+        if (user.getAvatarPublicId() != null && !user.getAvatarPublicId().isEmpty()) {
+            cloudinaryService.deleteImage(user.getAvatarPublicId());
+        }
+
+        // Upload new avatar
+        Map<String, String> uploadResult = cloudinaryService.uploadImage(file, "echonovel/avatars");
+        String publicId = uploadResult.get("publicId");
+
+        // Generate optimized URL (300x300 square, smart crop)
+        String optimizedUrl = cloudinaryService.getOptimizedUrl(publicId, 300, 300, "fill");
+
+        user.setAvatarUrl(optimizedUrl);
+        user.setAvatarPublicId(publicId);
+        user = userRepository.save(user);
+
+        log.info("User avatar updated via Cloudinary: email={}, publicId={}", email, publicId);
         return userMapper.toResponse(user);
     }
 

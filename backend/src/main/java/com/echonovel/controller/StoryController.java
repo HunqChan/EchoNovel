@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -77,5 +78,18 @@ public class StoryController {
     public ResponseEntity<ApiResponse<Void>> deleteStory(@PathVariable Long id) {
         storyService.deleteStory(id);
         return ResponseEntity.ok(ApiResponse.success("Xóa truyện thành công", null));
+    }
+
+    /**
+     * Upload cover image for a story via Cloudinary.
+     * Accepts JPG, PNG, WebP files up to 5MB.
+     */
+    @PostMapping("/api/admin/stories/{id}/cover")
+    public ResponseEntity<ApiResponse<StoryResponse>> uploadCoverImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        UploadController.validateImageFile(file);
+        StoryResponse data = storyService.updateCoverImage(id, file);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật ảnh bìa thành công", data));
     }
 }

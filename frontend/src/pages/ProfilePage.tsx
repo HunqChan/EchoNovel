@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/userService';
+import { uploadService } from '../services/uploadService';
 import { interactionService } from '../services/interactionService';
 import { toast } from 'react-hot-toast';
-import { User, Shield, Image as ImageIcon, Save, LogOut, Key, Wallet, Crown, ArrowUpRight, ArrowDownRight, Clock, Heart, BookOpen } from 'lucide-react';
+import { User, Shield, Image as ImageIcon, Save, LogOut, Key, Wallet, Crown, ArrowUpRight, ArrowDownRight, Clock, Heart, BookOpen, Upload, Loader2 } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import type { CoinTransaction, FavoriteResponse } from '../types';
@@ -24,6 +25,10 @@ const ProfilePage: React.FC = () => {
   const [username, setUsername] = useState(user?.username || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   const [isUpdatingInfo, setIsUpdatingInfo] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const avatarFileRef = useRef<HTMLInputElement>(null);
 
   // Security Tab State
   const [oldPassword, setOldPassword] = useState('');
@@ -82,6 +87,43 @@ const ProfilePage: React.FC = () => {
     }
   }, [activeTab, token]);
 
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Chỉ hỗ trợ file ảnh JPG, PNG, WebP');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Dung lượng file không được vượt quá 5MB');
+      return;
+    }
+
+    // Show preview immediately
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreview(previewUrl);
+    setSelectedAvatarFile(file);
+
+    // Reset file input so same file can be selected again if cancelled
+    if (avatarFileRef.current) avatarFileRef.current.value = '';
+  };
+
+  const handleCancelAvatar = () => {
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    setAvatarPreview(null);
+    setSelectedAvatarFile(null);
+  };
+
   const handleUpdateInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {
@@ -90,15 +132,31 @@ const ProfilePage: React.FC = () => {
     }
     try {
       setIsUpdatingInfo(true);
-      const res = await userService.updateProfile({ username, avatarUrl });
-      toast.success(res.message);
+      let finalAvatarUrl = avatarUrl;
+
+      // Upload avatar first if user selected a file
+      if (selectedAvatarFile) {
+        setIsUploadingAvatar(true);
+        const res = await uploadService.uploadAvatar(selectedAvatarFile);
+        finalAvatarUrl = res.data.avatarUrl || '';
+        setAvatarUrl(finalAvatarUrl);
+        setAvatarPreview(null);
+        setSelectedAvatarFile(null);
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setIsUploadingAvatar(false);
+      }
+
+      const res = await userService.updateProfile({ username, avatarUrl: finalAvatarUrl });
+      toast.success('Cập nhật hồ sơ thành công!');
       if (user && token && refreshToken) {
-        login(token, refreshToken, { ...user, username, avatarUrl });
+        login(token, refreshToken, { ...user, username, avatarUrl: finalAvatarUrl });
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Cập nhật thất bại');
+      setIsUploadingAvatar(false);
     } finally {
       setIsUpdatingInfo(false);
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -243,31 +301,80 @@ const ProfilePage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Ảnh đại diện (URL)</label>
-                    <div className="relative">
-                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                      <input
-                        type="url"
-                        value={avatarUrl}
-                        onChange={(e) => setAvatarUrl(e.target.value)}
-                        className="w-full bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3 pl-12 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                        placeholder="https://example.com/avatar.jpg"
-                      />
+                    <label className="block text-sm font-medium text-gray-300 mb-3">Ảnh đại diện</label>
+                    <div className="flex items-start gap-6">
+                      {/* Avatar Preview */}
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={avatarPreview || avatarUrl || `https://ui-avatars.com/api/?name=${user.username}&background=4f46e5&color=fff`}
+                          alt="Avatar preview"
+                          className="w-20 h-20 rounded-full object-cover border-4 border-gray-700 shadow-lg"
+                        />
+                        {isUploadingAvatar && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full">
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        {/* File Upload Buttons */}
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={avatarFileRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleAvatarFileChange}
+                            className="hidden"
+                            id="avatar-file-input"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => avatarFileRef.current?.click()}
+                            disabled={isUploadingAvatar || isUpdatingInfo}
+                            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium py-2.5 px-4 rounded-xl transition-colors disabled:opacity-70 disabled:cursor-not-allowed border border-gray-600"
+                          >
+                            <Upload className="w-4 h-4" />
+                            Chọn ảnh đại diện
+                          </button>
+                          {selectedAvatarFile && (
+                            <button
+                              type="button"
+                              onClick={handleCancelAvatar}
+                              disabled={isUploadingAvatar || isUpdatingInfo}
+                              className="text-sm font-medium py-2.5 px-4 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
+                            >
+                              Hủy
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">JPG, PNG hoặc WebP. Tối đa 5MB.</p>
+                        {/* Fallback: URL input */}
+                        <div className="relative">
+                          <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                          <input
+                            type="url"
+                            value={avatarUrl}
+                            onChange={(e) => setAvatarUrl(e.target.value)}
+                            className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 pl-10 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                            placeholder="Hoặc dán link ảnh..."
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <div className="pt-4 border-t border-gray-800">
                     <button
                       type="submit"
-                      disabled={isUpdatingInfo}
+                      disabled={isUpdatingInfo || isUploadingAvatar}
                       className="flex items-center justify-center gap-2 w-full sm:w-auto bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-6 rounded-xl transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      {isUpdatingInfo ? (
+                      {(isUpdatingInfo || isUploadingAvatar) ? (
                         <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                       ) : (
                         <Save className="w-5 h-5" />
                       )}
-                      Lưu thay đổi
+                      {isUploadingAvatar ? 'Đang tải ảnh...' : 'Lưu thay đổi'}
                     </button>
                   </div>
                 </form>

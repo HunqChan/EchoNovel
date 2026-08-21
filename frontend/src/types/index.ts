@@ -280,3 +280,10 @@ export interface TrendingStoryResponse {
   genres: string[];
 }
 
+// ========== Upload Types ==========
+
+export interface UploadResponse {
+  url: string;
+  publicId: string;
+}
+

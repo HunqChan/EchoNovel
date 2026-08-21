@@ -38,6 +38,11 @@ public enum ErrorCode {
     AUDIO_NOT_FOUND("AUDIO_NOT_FOUND", "Chương này chưa có audio", HttpStatus.NOT_FOUND),
     TTS_GENERATION_FAILED("TTS_GENERATION_FAILED", "Tạo audio thất bại, vui lòng thử lại", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    // ========== Upload ==========
+    INVALID_FILE_TYPE("INVALID_FILE_TYPE", "Chỉ hỗ trợ file ảnh JPG, PNG, WebP", HttpStatus.BAD_REQUEST),
+    FILE_TOO_LARGE("FILE_TOO_LARGE", "Dung lượng file không được vượt quá 5MB", HttpStatus.BAD_REQUEST),
+    UPLOAD_FAILED("UPLOAD_FAILED", "Upload ảnh thất bại, vui lòng thử lại", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // ========== General ==========
     VALIDATION_ERROR("VALIDATION_ERROR", "Dữ liệu không hợp lệ", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR("INTERNAL_ERROR", "Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR);
